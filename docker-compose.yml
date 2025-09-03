@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: pokedex_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: pokedex_user
+      POSTGRES_PASSWORD: pokedex_pass
+      POSTGRES_DB: pokedex_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
