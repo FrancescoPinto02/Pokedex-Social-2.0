@@ -11,8 +11,9 @@ import jakarta.persistence.Column;
 import java.util.Objects;
 
 /**
- * Entity that represents a Pokémon type (e.g., Grass, Fire, Water).
- * Used to define Pokémon primary and secondary types.
+ * Represents a Pokémon elemental type (e.g., Fire, Water, Grass).
+ * Types are used to define Pokémon categories and calculate
+ * damage effectiveness in battles.
  */
 @Entity
 @Table(name = "type")
@@ -21,7 +22,7 @@ public class Type {
     /** ID of the Type */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     /** Name of the type (unique), e.g., "Fire" */
     @Column(nullable = false, unique = true)
@@ -31,17 +32,17 @@ public class Type {
     public Type() {
     }
 
-    public Type(Long id, String name) {
+    public Type(Integer id, String name) {
         this.id = id;
         this.name = name;
     }
 
     // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
