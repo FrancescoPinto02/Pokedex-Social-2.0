@@ -17,7 +17,7 @@ public class PokemonService {
         this.pokemonRepository = pokemonRepository;
     }
 
-    public PokemonDto getPokemonById(Long id) {
+    public PokemonDto getPokemonById(Integer id) {
         Pokemon pokemon = pokemonRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pokemon with id " + id + " not found"));
 
