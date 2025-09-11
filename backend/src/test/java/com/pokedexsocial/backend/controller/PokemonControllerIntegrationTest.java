@@ -1,6 +1,5 @@
 package com.pokedexsocial.backend.controller;
 
-import com.pokedexsocial.backend.service.PokemonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -46,7 +45,7 @@ class PokemonControllerIntegrationTest {
         mockMvc.perform(get("/pokemon/" + nonExistingId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Pokemon with id " + nonExistingId + " not found"))
+                .andExpect(jsonPath("$.details").value("Pokemon with id " + nonExistingId + " not found"))
                 .andExpect(jsonPath("$.status").value(404));
     }
 
