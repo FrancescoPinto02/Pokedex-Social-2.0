@@ -1,30 +1,52 @@
 package com.pokedexsocial.backend.service;
 
+import com.pokedexsocial.backend.controller.PokemonSearchCriteria;
 import com.pokedexsocial.backend.dto.AbilityDto;
 import com.pokedexsocial.backend.dto.PokemonDto;
+import com.pokedexsocial.backend.dto.PokemonListDto;
 import com.pokedexsocial.backend.dto.TypeDto;
 import com.pokedexsocial.backend.exception.NotFoundException;
 import com.pokedexsocial.backend.model.Pokemon;
 import com.pokedexsocial.backend.repository.PokemonRepository;
+import com.pokedexsocial.backend.specification.PokemonSpecification;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Service for managing Pokémon.
+ * Provides operations to retrieve a single Pokémon by ID
+ * and to search Pokémon based on specific criteria.
+ */
 @Service
 public class PokemonService {
 
     private final PokemonRepository pokemonRepository;
 
+    /**
+     * Constructor.
+     *
+     * @param pokemonRepository the Pokémon repository
+     */
     public PokemonService(PokemonRepository pokemonRepository) {
         this.pokemonRepository = pokemonRepository;
     }
 
+    /**
+     * Retrieves a Pokémon by its ID.
+     *
+     * @param id - the ID of the Pokémon
+     * @return the Pokémon DTO
+     * @throws NotFoundException if the Pokémon is not found
+     */
     public PokemonDto getPokemonById(Integer id) {
-        Pokemon pokemon = pokemonRepository.findById(id)
+        Pokemon p = pokemonRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pokemon with id " + id + " not found"));
 
-        return mapToDto(pokemon);
-    }
-
-    private PokemonDto mapToDto(Pokemon p) {
         return new PokemonDto(
                 p.getId(),
                 p.getNdex(),
@@ -53,5 +75,33 @@ public class PokemonService {
                 p.getEggGroup2(),
                 p.getImageUrl()
         );
+    }
+
+    /**
+     * Searches Pokémon based on criteria and pagination.
+     *
+     * @param criteria - the search criteria
+     * @param pageable - pagination information
+     * @return a page of Pokémon DTOs
+     */
+    public Page<PokemonListDto> search(PokemonSearchCriteria criteria, Pageable pageable) {
+        var spec = PokemonSpecification.fromCriteria(criteria);
+        Page<Pokemon> page = pokemonRepository.findAll(spec, pageable);
+
+        return page.map(p -> {
+            List<TypeDto> types = new ArrayList<>();
+            if (p.getType1() != null) types.add(new TypeDto(p.getType1().getId(), p.getType1().getName()));
+            if (p.getType2() != null) types.add(new TypeDto(p.getType2().getId(), p.getType2().getName()));
+
+            return new PokemonListDto(
+                    p.getId(),
+                    p.getNdex(),
+                    p.getSpecies(),
+                    p.getForme(),
+                    p.getPokemonClass(),
+                    types,
+                    p.getImageUrl()
+            );
+        });
     }
 }
