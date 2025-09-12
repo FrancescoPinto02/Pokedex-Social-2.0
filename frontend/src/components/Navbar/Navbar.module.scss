@@ -1,53 +1,73 @@
-@import '../../styles/_colors.scss';
+@import "../../styles/_variables.scss";
 
 .navbar {
-  background: $red;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  flex-wrap: wrap;
-}
+  justify-content: center;
+  padding: 0 1rem;
+  height: 80px;
+  background: $white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: $white;
+  // Mobile
+  @media (max-width: 768px) {
+    flex-direction: row;
+    justify-content: flex-start;
+    background: rgb(56, 54, 54);
+  }
 }
 
 .menu {
-  list-style: none;
   display: flex;
-  gap: 1rem;
+  justify-content: center;
+  list-style: none;
+  gap: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
 
-  li {
-    a {
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      background: $yellow;
-      color: $black;
-      font-weight: bold;
-      transition: all 0.2s;
+  // Desktop
+  @media (min-width: 769px) {
+    flex-direction: row;
+    height: 110%;
+    overflow: hidden;
+    border-radius: 0 0 20px 20px;
+  }
 
-      &:hover {
-        background: $white;
-        color: $red;
-      }
+  // Mobile
+  @media (max-width: 768px) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    flex-direction: column;
+    background: $white;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    border-radius: 0 0 20px 20px;
+
+    &.open {
+      max-height: 500px;
+      opacity: 1;
     }
   }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .menu {
-    flex-direction: column;
-    width: 100%;
-    margin-top: 1rem;
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
 
-    li a {
-      text-align: center;
-      display: block;
-    }
+  @media (max-width: 768px) {
+    display: block;
+    color: white;
   }
 }

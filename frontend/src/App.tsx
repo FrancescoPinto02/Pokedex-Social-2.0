@@ -8,14 +8,18 @@ import Pokedex from './pages/Pokedex/Pokedex';
 const App = () => {
   return (
     <Router>
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/pokedex" element={<Pokedex />} />
-        </Routes>
-      </main>
-      <Footer />
+      <div className="app-container">
+        <Navbar />
+        <div className="main-container">
+          <main>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/pokedex" element={<Pokedex />} />
+            </Routes>
+          </main>
+        </div>
+        <Footer />
+      </div>
     </Router>
   );
 };

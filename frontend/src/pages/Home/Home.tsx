@@ -1,27 +1,18 @@
 import React from 'react';
 import styles from './Home.module.scss';
+import Hero from '../../components/Hero/Hero';
 
 const Home = () => {
   return (
     <div className={styles.home}>
-      <section className={styles.hero}>
-        <h1>Benvenuto su PokeDex 2.0</h1>
-        <p>Esplora tutti i Pokémon e costruisci il tuo team!</p>
-        <button>Scopri il Pokedex</button>
-      </section>
-
-      <section className={styles.features}>
-        <div className={styles.feature}>
-          <img src="/images/pokemon1.png" alt="Pokémon" />
-          <h3>Lorem Ipsum</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-        </div>
-        <div className={styles.feature}>
-          <img src="/images/pokemon2.png" alt="Pokémon" />
-          <h3>Lorem Ipsum</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-        </div>
-      </section>
+      <Hero
+        title={"Welcome to \nPokédex-Social 2.0"}
+        description="Discover all Pokémon, explore abilities, types, and build your collection."
+        ctaText="Explore the Pokedex"
+        ctaLink="/pokedex"
+        imageSrc="/images/hero/hero1.png"
+        imageAlt="Pokémon illustration"
+      />
     </div>
   );
 };

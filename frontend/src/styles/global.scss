@@ -5,6 +5,10 @@
   box-sizing: border-box;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 body {
   font-family: 'Roboto', sans-serif; /* o un font simile */
   background-color: #f8f8f8;
@@ -21,4 +25,27 @@ a {
   width: 90%;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* occupa tutta la finestra */
+}
+
+.main-container {
+  flex: 1;
+  margin-top: 80px;
+  background-image: url("https://assets.pokemon.com/static2/_ui/img/chrome/body_bg.png");
+}
+
+main {
+  background-color: white;
+  background-image: url("https://assets.pokemon.com/static2/_ui/img/chrome/container_bg.png");
+  margin: 0 10%;
+  min-height: 100vh;
+
+  @media (max-width: 768px) {
+    margin: 0;
+  }
 }

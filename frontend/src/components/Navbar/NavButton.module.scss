@@ -1,0 +1,64 @@
+@import '../../styles/_variables.scss';
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 15px;
+  height: 100%;
+  width: 150px;
+  background: linear-gradient(to bottom, $white 92%, var(--btn-color) 8%);
+  color: $black;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  .icon {
+    font-size: 1.6rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .label {
+    font-size: 1.2rem;
+  }
+
+  &:hover {
+    background: var(--btn-color);
+    color: $white;
+  }
+
+  &:hover .icon,
+  &:hover .label {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+  }
+
+  &.active {
+    background: var(--btn-color);
+    color: $white;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .navButton {
+    width: 100%;
+    padding: 15px;
+    flex-direction: row;
+    justify-content: flex-start;
+    background: linear-gradient(to right, var(--btn-color) 1%, $white 1%);
+
+    .icon {
+      padding: 0 20px 0 0;
+      justify-content: center;
+      margin: 0;
+      font-size: 2.2rem;
+    }
+
+    .label {
+      font-size: 1.4rem;
+    }
+  }
+    
+    
+  }

@@ -1,9 +1,81 @@
-@import '../../styles/_colors.scss';
+@import "../../styles/_variables.scss";
 
 .footer {
-  background: $blue;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 2rem 1rem;
+  background: $black;
   color: $white;
-  text-align: center;
-  padding: 1rem;
-  margin-top: 2rem;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
+
+  .brand {
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.7);
+    }
+  }
+
+  .links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+
+    li a {
+      color: $white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: $white;
+      }
+    }
+  }
+
+  .social {
+    display: flex;
+    gap: 1rem;
+
+    a {
+      color: $white;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: $white;
+      }
+    }
+  }
+
+  .disclaimer {
+    width: 100%;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+  }
+
+  // Mobile
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    gap: 1.5rem;
+
+    .links {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .social {
+      justify-content: center;
+    }
+  }
 }
