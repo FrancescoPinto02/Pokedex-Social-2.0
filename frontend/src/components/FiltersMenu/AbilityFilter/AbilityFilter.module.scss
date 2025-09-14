@@ -1,0 +1,51 @@
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterGroup h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.selectInput {
+  width: 30%;
+  text-align: center;
+  padding: 8px 12px;
+  border: 1.5px solid #d1d5db; /* grigio chiaro */
+  border-radius: 8px;
+  font-size: 1.2rem;
+  color: #333;
+  size: 6;
+  background-color: #fff;
+
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: #2d72d9;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #2d72d9;
+    box-shadow: 0 0 0 3px rgba(45, 114, 217, 0.25);
+  }
+
+  &:disabled {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+}
+
+/* Opzioni interne */
+.selectInput option {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+}

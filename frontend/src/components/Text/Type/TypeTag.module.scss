@@ -1,0 +1,42 @@
+.typeSpan {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  width: 90px;
+  color: white;
+  text-transform: uppercase;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.selected {
+  outline: 3px solid #2d72d9;
+  transform: scale(1.05);
+}
+
+.label {
+  z-index: 1;
+}
+
+.checkIcon {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  color: white;
+}

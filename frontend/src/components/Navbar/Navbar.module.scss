@@ -1,0 +1,73 @@
+@use "../../styles/_variables.scss" as v;
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  height: 80px;
+  background: v.$white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  
+
+  // Mobile
+  @media (max-width: 768px) {
+    flex-direction: row;
+    justify-content: flex-start;
+    background: rgb(56, 54, 54);
+  }
+}
+
+.menu {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  gap: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+
+  // Desktop
+  @media (min-width: 769px) {
+    flex-direction: row;
+    height: 95px;
+    overflow: hidden;
+    border-radius: 0 0 20px 20px;
+  }
+
+  // Mobile
+  @media (max-width: 768px) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    flex-direction: column;
+    background: v.$white;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    border-radius: 0 0 20px 20px;
+
+    &.open {
+      max-height: 500px;
+      opacity: 1;
+    }
+  }
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+
+  @media (max-width: 768px) {
+    display: block;
+    color: white;
+  }
+}

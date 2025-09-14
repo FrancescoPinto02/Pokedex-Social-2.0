@@ -1,0 +1,51 @@
+@use "../../../styles/variables" as v;
+
+.card {
+    .ndex{
+        font-size: 1.2rem;
+        color: gray;
+        text-align: start;
+        padding-left: 5px;
+    }
+
+    .cardImage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 200px;
+        width: 200px;
+        border-radius: 5%;
+
+        background-color: rgb(203, 199, 199);
+
+        img{
+            width: 80%;
+        }
+    }
+
+    .cardBody{
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding-left: 5px;
+
+        
+
+        .name{
+            font-size: 1.5rem;
+        }
+
+        .types{
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+        }
+    }
+}
+
+.card:hover {
+    transform: translateY(-5px) scale(1.03);
+}

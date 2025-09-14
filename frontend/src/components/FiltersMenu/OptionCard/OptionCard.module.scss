@@ -1,0 +1,44 @@
+.optionCard {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(.disabled) {
+    border-color: #2d72d9;
+    background-color: #f0f7ff;
+  }
+}
+
+.selected {
+  border-color: #2d72d9;
+  background-color: #e6f0ff;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.label {
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.checkIcon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: #2d72d9;
+}

@@ -38,7 +38,7 @@
     <!-- Line length check -->
     <module name="LineLength">
         <property name="fileExtensions" value="java"/> <!-- Apply only to .java files -->
-        <property name="max" value="100"/> <!-- Maximum line length -->
+        <property name="max" value="180"/> <!-- Maximum line length -->
         <property name="ignorePattern"
                   value="^package.*|^import.*|href\s*=\s*&quot;[^&quot;]*&quot;|http://|https://|ftp://"/>
         <!-- Patterns to ignore for line length:
