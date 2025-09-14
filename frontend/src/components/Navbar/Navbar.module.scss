@@ -1,4 +1,4 @@
-@import "../../styles/_variables.scss";
+@use "../../styles/_variables.scss" as v;
 
 .navbar {
   position: fixed;
@@ -10,7 +10,7 @@
   justify-content: center;
   padding: 0 1rem;
   height: 80px;
-  background: $white;
+  background: v.$white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -34,7 +34,7 @@
   // Desktop
   @media (min-width: 769px) {
     flex-direction: row;
-    height: 110%;
+    height: 95px;
     overflow: hidden;
     border-radius: 0 0 20px 20px;
   }
@@ -46,7 +46,7 @@
     left: 0;
     width: 100%;
     flex-direction: column;
-    background: $white;
+    background: v.$white;
     max-height: 0;
     overflow: hidden;
     opacity: 0;

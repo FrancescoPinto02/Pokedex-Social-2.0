@@ -1,13 +1,57 @@
+@use "../../styles/variables" as v;
+
 .pokedex {
   text-align: center;
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
 
-  h1 {
-    color: #ee1515; /* rosso Pokémon */
-    margin-bottom: 1rem;
+  .cardContainer {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    gap: 4rem;
   }
 
-  p {
-    color: #333;
+  .loadMoreButton{
+    margin-top: 50px;
+    background-color: v.$blue;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover{
+      background-color: v.$red;
+      transform: scale(1.05);
+    }
+  }
+}
+
+
+@media (max-width: v.$breakpoint-sm) {
+  .pokedex{
+    .cardContainer{
+      grid-template-columns: auto;
+    }
+  }
+}
+
+@media (min-width: (v.$breakpoint-sm+1)) and (max-width: v.$breakpoint-md){
+  .pokedex{
+    .cardContainer{
+      grid-template-columns: auto auto;
+    }
+  }
+}
+
+@media (min-width: (v.$breakpoint-md+1)) and (max-width: v.$breakpoint-lg){
+  .pokedex{
+    .cardContainer{
+      grid-template-columns: auto auto auto;
+    }
   }
 }

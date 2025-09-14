@@ -1,0 +1,37 @@
+@use "../../../styles/variables" as v;
+
+.searchBar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+
+    .searchInput {
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1.5rem;
+    }
+
+    .searchButton {
+        padding: 6px 12px;
+        background-color: v.$blue;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        font-size: 1.5rem;
+
+        
+        &:hover:not(:disabled) {
+            background-color: v.$red;
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+}

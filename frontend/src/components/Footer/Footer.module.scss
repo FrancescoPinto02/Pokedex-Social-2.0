@@ -1,4 +1,4 @@
-@import "../../styles/_variables.scss";
+@use "../../styles/_variables.scss" as v;
 
 .footer {
   display: flex;
@@ -6,8 +6,8 @@
   align-items: flex-start;
   flex-wrap: wrap;
   padding: 2rem 1rem;
-  background: $black;
-  color: $white;
+  background: v.$black;
+  color: v.$white;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
 
   .brand {
@@ -28,13 +28,13 @@
     list-style: none;
 
     li a {
-      color: $white;
+      color: v.$white;
       text-decoration: none;
       font-weight: 500;
       transition: color 0.3s ease;
 
       &:hover {
-        color: $white;
+        color: v.$white;
       }
     }
   }
@@ -44,12 +44,12 @@
     gap: 1rem;
 
     a {
-      color: $white;
+      color: v.$white;
       font-size: 1.2rem;
       transition: color 0.3s ease;
 
       &:hover {
-        color: $white;
+        color: v.$white;
       }
     }
   }

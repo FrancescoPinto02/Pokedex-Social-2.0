@@ -1,0 +1,80 @@
+@use "../../styles/variables" as v;
+
+.filters {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem; // meno spazio quando chiuso
+
+  .filterButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background-color: v.$blue;
+      color: white;
+      transition: background-color 0.2s ease;
+      font-size: 1.5rem;
+    }
+
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    button:not(:disabled):hover {
+      background-color: v.$red;
+    }
+  }
+}
+
+.advancedFilters {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.closed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.open {
+  max-height: 1000px; // abbastanza grande da contenere tutto
+  opacity: 1;
+}
+
+.toggleButton {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: v.$blue;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+
+
+
+
+
+
+

@@ -1,11 +1,11 @@
-@import "../../styles/_variables.scss";
+@use "../../styles/_variables.scss" as v;
 
 .hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 4rem 2rem;
-  color: $white;
+  color: v.$white;
 
   .content {
     max-width: 600px;
@@ -27,7 +27,7 @@
 
     .cta {
       display: inline-block;
-      background: $white;
+      background: v.$white;
       color: #3b4cca;
       padding: 0.75rem 2rem;
       width: fit-content;
@@ -38,9 +38,9 @@
       transition: all 0.3s ease;
 
       &:hover {
-        background: $red;
+        background: v.$red;
         transform: translateY(-2px);
-        color: $white;
+        color: v.$white;
       }
     }
   }
@@ -55,7 +55,7 @@
   }
 
   // Mobile
-  @media (max-width: $breakpoint-md) {
+  @media (max-width: v.$breakpoint-md) {
     flex-direction: column-reverse;
     text-align: center;
     gap: 2rem;
