@@ -1,4 +1,4 @@
-package com.pokedexsocial.backend.controller;
+package com.pokedexsocial.backend.specification;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;

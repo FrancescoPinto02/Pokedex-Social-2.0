@@ -3,7 +3,10 @@ package com.pokedexsocial.backend.repository;
 import com.pokedexsocial.backend.model.Pokemon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
 
 /**
  * Repository interface for Pokémon entities.
@@ -12,4 +15,22 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface PokemonRepository extends JpaRepository<Pokemon, Integer>, JpaSpecificationExecutor<Pokemon> {
+
+    @Query("SELECT MIN(p.ndex) FROM Pokemon p")
+    Integer findMinNdex();
+
+    @Query("SELECT MAX(p.ndex) FROM Pokemon p")
+    Integer findMaxNdex();
+
+    @Query("SELECT MIN(p.weight) FROM Pokemon p")
+    BigDecimal findMinWeight();
+
+    @Query("SELECT MAX(p.weight) FROM Pokemon p")
+    BigDecimal findMaxWeight();
+
+    @Query("SELECT MIN(p.height) FROM Pokemon p")
+    BigDecimal findMinHeight();
+
+    @Query("SELECT MAX(p.height) FROM Pokemon p")
+    BigDecimal findMaxHeight();
 }

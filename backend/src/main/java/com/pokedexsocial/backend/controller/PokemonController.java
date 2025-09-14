@@ -2,8 +2,10 @@ package com.pokedexsocial.backend.controller;
 
 import com.pokedexsocial.backend.dto.PagedResponse;
 import com.pokedexsocial.backend.dto.PokemonDto;
+import com.pokedexsocial.backend.dto.PokemonFiltersDto;
 import com.pokedexsocial.backend.dto.PokemonListDto;
 import com.pokedexsocial.backend.service.PokemonService;
+import com.pokedexsocial.backend.specification.PokemonSearchCriteria;
 import com.pokedexsocial.backend.util.SortWhitelist;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -14,16 +16,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
 /** REST controller for Pokémon catalog endpoints. */
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/pokemon")
 @Validated
 public class PokemonController {
@@ -70,5 +69,11 @@ public class PokemonController {
         Pageable safePageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), safeSort);
         Page<PokemonListDto> result = pokemonService.search(criteria, safePageable);
         return PagedResponse.from(result);
+    }
+
+    @GetMapping("/filters")
+    public ResponseEntity<PokemonFiltersDto> getFilters() {
+        PokemonFiltersDto filters = pokemonService.getFilters();
+        return ResponseEntity.ok(filters);
     }
 }

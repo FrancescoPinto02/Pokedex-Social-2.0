@@ -1,9 +1,7 @@
 package com.pokedexsocial.backend.specification;
 
 
-import com.pokedexsocial.backend.controller.PokemonSearchCriteria;
 import com.pokedexsocial.backend.model.Pokemon;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -12,9 +10,6 @@ import java.util.List;
 
 /**
  * Utility class to build {@link Specification} objects for {@link Pokemon}.
- * <p>
- * Creates dynamic predicates from {@link PokemonSearchCriteria} and applies
- * LEFT fetch joins for associations (only on non-count queries) to avoid N+1 issues.
  */
 public final class PokemonSpecification {
 
@@ -28,17 +23,6 @@ public final class PokemonSpecification {
      */
     public static Specification<Pokemon> fromCriteria(PokemonSearchCriteria c) {
         return (root, query, cb) -> {
-            boolean isCount = Long.class.equals(query.getResultType());
-            if (!isCount) {
-                // fetch per evitare N+1
-                root.fetch("type1", JoinType.LEFT);
-                root.fetch("type2", JoinType.LEFT);
-                root.fetch("ability1", JoinType.LEFT);
-                root.fetch("ability2", JoinType.LEFT);
-                root.fetch("hiddenAbility", JoinType.LEFT);
-                query.distinct(true);
-            }
-
             List<Predicate> predicates = new ArrayList<>();
 
             // q: species substring (case-insensitive)
@@ -56,7 +40,7 @@ public final class PokemonSpecification {
                     typePreds.add(cb.or(p1, p2));
                 }
                 // any selected type matches
-                predicates.add(cb.or(typePreds.toArray(new Predicate[0])));
+                predicates.add(cb.and(typePreds.toArray(new Predicate[0])));
             }
 
             // ability: matches any ability slot

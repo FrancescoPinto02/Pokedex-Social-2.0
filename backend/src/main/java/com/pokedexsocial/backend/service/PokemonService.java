@@ -1,19 +1,25 @@
 package com.pokedexsocial.backend.service;
 
-import com.pokedexsocial.backend.controller.PokemonSearchCriteria;
+import com.pokedexsocial.backend.specification.PokemonSearchCriteria;
 import com.pokedexsocial.backend.dto.AbilityDto;
+import com.pokedexsocial.backend.dto.AbilityListDto;
 import com.pokedexsocial.backend.dto.PokemonDto;
+import com.pokedexsocial.backend.dto.PokemonFiltersDto;
 import com.pokedexsocial.backend.dto.PokemonListDto;
 import com.pokedexsocial.backend.dto.TypeDto;
 import com.pokedexsocial.backend.exception.NotFoundException;
 import com.pokedexsocial.backend.model.Pokemon;
+import com.pokedexsocial.backend.repository.AbilityRepository;
 import com.pokedexsocial.backend.repository.PokemonRepository;
+import com.pokedexsocial.backend.repository.TypeRepository;
 import com.pokedexsocial.backend.specification.PokemonSpecification;
 
+import com.pokedexsocial.backend.util.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,16 +30,19 @@ import java.util.List;
  */
 @Service
 public class PokemonService {
-
     private final PokemonRepository pokemonRepository;
+    private final TypeRepository typeRepository;
+    private final AbilityRepository abilityRepository;
 
     /**
      * Constructor.
      *
      * @param pokemonRepository the Pokémon repository
      */
-    public PokemonService(PokemonRepository pokemonRepository) {
+    public PokemonService(PokemonRepository pokemonRepository, TypeRepository typeRepository, AbilityRepository abilityRepository) {
         this.pokemonRepository = pokemonRepository;
+        this.typeRepository = typeRepository;
+        this.abilityRepository = abilityRepository;
     }
 
     /**
@@ -103,5 +112,43 @@ public class PokemonService {
                     p.getImageUrl()
             );
         });
+    }
+
+    public PokemonFiltersDto getFilters() {
+        // Retrieves all types
+        List<TypeDto> types = typeRepository.findAll().stream()
+                .map(t -> new TypeDto(t.getId(), t.getName()))
+                .toList();
+
+        // Retrieves all abilities
+        List<AbilityListDto> abilities = abilityRepository.findAll().stream()
+                .map(a -> new AbilityListDto(a.getId(), a.getName()))
+                .toList();
+
+        // ndex
+        Range<Integer> ndexRange = new Range<>(
+                pokemonRepository.findMinNdex(),
+                pokemonRepository.findMaxNdex()
+        );
+
+        // height
+        Range<BigDecimal> heightRange = new Range<>(
+                pokemonRepository.findMinHeight(),
+                pokemonRepository.findMaxHeight()
+        );
+
+        // width
+        Range<BigDecimal> widthRange = new Range<>(
+                pokemonRepository.findMinWeight(),
+                pokemonRepository.findMaxWeight()
+        );
+
+        return new  PokemonFiltersDto(
+                types,
+                abilities,
+                ndexRange,
+                widthRange,
+                heightRange
+        );
     }
 }

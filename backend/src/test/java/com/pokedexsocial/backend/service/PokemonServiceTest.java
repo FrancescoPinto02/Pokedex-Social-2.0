@@ -5,7 +5,9 @@ import com.pokedexsocial.backend.exception.NotFoundException;
 import com.pokedexsocial.backend.model.Ability;
 import com.pokedexsocial.backend.model.Pokemon;
 import com.pokedexsocial.backend.model.Type;
+import com.pokedexsocial.backend.repository.AbilityRepository;
 import com.pokedexsocial.backend.repository.PokemonRepository;
+import com.pokedexsocial.backend.repository.TypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,12 +22,16 @@ import static org.mockito.Mockito.when;
  */
 public class PokemonServiceTest {
     private PokemonRepository pokemonRepository;
+    private TypeRepository typeRepository;
+    private AbilityRepository abilityRepository;
     private PokemonService pokemonService;
 
     @BeforeEach
     void setUp() {
         pokemonRepository = Mockito.mock(PokemonRepository.class);
-        pokemonService = new PokemonService(pokemonRepository);
+        typeRepository = Mockito.mock(TypeRepository.class);
+        abilityRepository = Mockito.mock(AbilityRepository.class);
+        pokemonService = new PokemonService(pokemonRepository, typeRepository, abilityRepository);
     }
 
     /**
