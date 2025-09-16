@@ -45,7 +45,7 @@ class PokemonControllerIntegrationTest {
         mockMvc.perform(get("/pokemon/" + nonExistingId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.details").value("Pokemon with id " + nonExistingId + " not found"))
+                .andExpect(jsonPath("$.detail").value("Pokemon with id " + nonExistingId + " not found"))
                 .andExpect(jsonPath("$.status").value(404));
     }
 

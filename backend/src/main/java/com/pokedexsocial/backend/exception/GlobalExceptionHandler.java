@@ -2,66 +2,129 @@ package com.pokedexsocial.backend.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
+import java.net.URI;
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
-/** Global handler for REST exceptions. */
+/**
+ * Global exception handler that converts exceptions into standardized
+ * RFC 7807 {@link org.springframework.http.ProblemDetail} responses.
+ *
+ * <p>This handler ensures that all errors returned by the API are consistent,
+ * including authentication, authorization, validation, and domain-specific errors.</p>
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private Map<String, Object> buildErrorResponse(HttpStatus status, String error, Object details) {
-        return Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", status.value(),
-                "error", error,
-                "details", details
+    private ProblemDetail buildProblemDetail(
+            HttpStatus status, String title, String detail, String typeUri, WebRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatus(status);
+        problem.setTitle(title);
+        problem.setDetail(detail);
+        problem.setType(URI.create(typeUri));
+        problem.setProperty("instance", request.getDescription(false).replace("uri=", ""));
+        return problem;
+    }
+
+    /** Handles resource not found errors (404) */
+    @ExceptionHandler(NotFoundException.class)
+    public ProblemDetail handleNotFound(NotFoundException ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.NOT_FOUND,
+                "Not Found",
+                ex.getMessage(),
+                "https://example.com/probs/not-found",
+                request
         );
     }
 
-    /**
-     * Handler for Exception {@link NotFoundException}
-     */
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(buildErrorResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    /** Handles forbidden access errors (403) */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.FORBIDDEN,
+                "Forbidden",
+                ex.getMessage(),
+                "https://example.com/probs/forbidden",
+                request
+        );
     }
 
-    /**
-     * Handler for Exception {@link MethodArgumentNotValidException}
-     */
+    /** Handles invalid credentials or authentication errors (401) */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.UNAUTHORIZED,
+                "Unauthorized",
+                ex.getMessage(),
+                "https://example.com/probs/invalid-credentials",
+                request
+        );
+    }
+
+    /** Handles email or username conflicts (409) */
+    @ExceptionHandler({EmailAlreadyUsedException.class, UsernameAlreadyUsedException.class})
+    public ProblemDetail handleConflict(RuntimeException ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.CONFLICT,
+                "Conflict",
+                ex.getMessage(),
+                "https://example.com/probs/conflict",
+                request
+        );
+    }
+
+    /** Handles validation errors (400) */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex, WebRequest request) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> Map.of("field", e.getField(), "message", e.getDefaultMessage()))
                 .toList();
-        return ResponseEntity.badRequest()
-                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", errors));
+
+        ProblemDetail problem = buildProblemDetail(
+                HttpStatus.BAD_REQUEST,
+                "Validation Failed",
+                "Invalid request payload",
+                "https://example.com/probs/validation-error",
+                request
+        );
+        problem.setProperty("errors", errors);
+        return problem;
     }
 
-    /**
-     * Handler for Exception {@link ConstraintViolationException}
-     */
+    /** Handles constraint violations (400) */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
+    public ProblemDetail handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
         var errors = ex.getConstraintViolations().stream()
                 .map(v -> Map.of("param", v.getPropertyPath().toString(), "message", v.getMessage()))
                 .toList();
-        return ResponseEntity.badRequest()
-                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Constraint Violation", errors));
+
+        ProblemDetail problem = buildProblemDetail(
+                HttpStatus.BAD_REQUEST,
+                "Constraint Violation",
+                "Invalid request parameters",
+                "https://example.com/probs/constraint-violation",
+                request
+        );
+        problem.setProperty("errors", errors);
+        return problem;
     }
 
-    /**
-     * Handler for Generic Exception
-     */
+    /** Handles generic unexpected exceptions (500) */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage()));
+    public ProblemDetail handleGeneric(Exception ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal Server Error",
+                ex.getMessage(),
+                "https://example.com/probs/internal-error",
+                request
+        );
     }
 }
