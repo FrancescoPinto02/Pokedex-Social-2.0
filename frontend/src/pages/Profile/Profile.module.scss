@@ -1,0 +1,87 @@
+.profilePage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+
+  .card {
+    background: #f2f2f2;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      border: 3px solid #ffcb05;
+    }
+
+    h2 {
+      margin-bottom: 0.5rem;
+      color: #3b4cca;
+    }
+
+    p {
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      color: #333;
+    }
+
+    .pokecoins {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1rem;
+      font-weight: bold;
+
+      .coin {
+        width: 24px;
+        height: 24px;
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+.loading,
+.error {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+@media (max-width: 480px) {
+  .profilePage {
+    padding: 1rem;
+    .card {
+      padding: 1.5rem;
+      .avatar {
+        width: 100px;
+        height: 100px;
+      }
+    }
+  }
+}
+
+.logoutButton {
+  margin-top: 1.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #ff3b3b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #ff1f1f;
+  }
+}
