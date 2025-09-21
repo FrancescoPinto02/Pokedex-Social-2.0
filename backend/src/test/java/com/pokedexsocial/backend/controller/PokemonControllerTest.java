@@ -74,7 +74,7 @@ class PokemonControllerTest {
         mockMvc.perform(get("/pokemon/99999")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.details").value("Pokemon with id 99999 not found"))
+                .andExpect(jsonPath("$.detail").value("Pokemon with id 99999 not found"))
                 .andExpect(jsonPath("$.status").value(404));
     }
 

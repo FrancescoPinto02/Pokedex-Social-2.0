@@ -55,5 +55,24 @@ CREATE TABLE Pokemon (
     image_url TEXT
 );
 
+-- =====================================================
+-- TABLE: User
+-- =====================================================
+CREATE TABLE app_user (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    birth_date DATE NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    pokecoin BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE INDEX idx_user_email ON app_user(email);
+CREATE INDEX idx_user_username ON app_user(username);
 
 

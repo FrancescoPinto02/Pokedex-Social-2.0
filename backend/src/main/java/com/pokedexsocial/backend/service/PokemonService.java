@@ -1,5 +1,6 @@
 package com.pokedexsocial.backend.service;
 
+import com.pokedexsocial.backend.exception.PokemonNotFoundException;
 import com.pokedexsocial.backend.specification.PokemonSearchCriteria;
 import com.pokedexsocial.backend.dto.AbilityDto;
 import com.pokedexsocial.backend.dto.AbilityListDto;
@@ -7,7 +8,6 @@ import com.pokedexsocial.backend.dto.PokemonDto;
 import com.pokedexsocial.backend.dto.PokemonFiltersDto;
 import com.pokedexsocial.backend.dto.PokemonListDto;
 import com.pokedexsocial.backend.dto.TypeDto;
-import com.pokedexsocial.backend.exception.NotFoundException;
 import com.pokedexsocial.backend.model.Pokemon;
 import com.pokedexsocial.backend.repository.AbilityRepository;
 import com.pokedexsocial.backend.repository.PokemonRepository;
@@ -50,11 +50,11 @@ public class PokemonService {
      *
      * @param id - the ID of the Pokémon
      * @return the Pokémon DTO
-     * @throws NotFoundException if the Pokémon is not found
+     * @throws PokemonNotFoundException if the Pokémon is not found
      */
     public PokemonDto getPokemonById(Integer id) {
         Pokemon p = pokemonRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Pokemon with id " + id + " not found"));
+                .orElseThrow(() -> new PokemonNotFoundException("Pokemon with id " + id + " not found"));
 
         return new PokemonDto(
                 p.getId(),

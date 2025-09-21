@@ -1,10 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import styles from './Pokedex.module.scss';
 import Title from '../../components/Text/Title/Title';
 import Card from '../../components/Catalogue/Card/Card';
 import FiltersMenu from '../../components/FiltersMenu/FiltersMenu';
 import type { Pokemon } from '../../types/Pokemon';
 import type { Filters } from '../../types/filters/Filters';
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface AppliedFilters {
   selectedTypes: number[];
@@ -47,7 +48,7 @@ const Pokedex = () => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8080/pokemon/filters');
+        const res = await fetch(`${API_URL}/pokemon/filters`);
         const data: Filters = await res.json();
         setFilters(data);
         setNdexRangeSelected({
@@ -140,7 +141,7 @@ const Pokedex = () => {
     setLoading(true);
     try {
       const queryString = buildQueryParams(pageNumber, filtersToUse);
-      const response = await fetch(`http://127.0.0.1:8080/pokemon?${queryString}`);
+      const response = await fetch(`${API_URL}/pokemon?${queryString}`);
       const data = await response.json();
       setPokemonList(prev => (resetList ? data.items : [...prev, ...data.items]));
       setPage(data.page);
