@@ -7,6 +7,16 @@ CREATE TABLE Type (
 );
 
 -- =====================================================
+-- TABLE: TypeEffectiveness
+-- =====================================================
+CREATE TABLE type_effectiveness (
+    attacker_type_id INT NOT NULL REFERENCES type(id) ON DELETE CASCADE,
+    defender_type_id INT NOT NULL REFERENCES type(id) ON DELETE CASCADE,
+    multiplier NUMERIC(2,1) NOT NULL CHECK (multiplier IN (0, 0.5, 1, 2)),
+    PRIMARY KEY (attacker_type_id, defender_type_id)
+);
+
+-- =====================================================
 -- TABLE: Ability
 -- =====================================================
 CREATE TABLE Ability (
@@ -72,13 +82,33 @@ CREATE TABLE app_user (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-CREATE TABLE type_effectiveness (
-    attacker_type_id INT NOT NULL REFERENCES type(id) ON DELETE CASCADE,
-    defender_type_id INT NOT NULL REFERENCES type(id) ON DELETE CASCADE,
-    multiplier NUMERIC(2,1) NOT NULL CHECK (multiplier IN (0, 0.5, 1, 2)),
-    PRIMARY KEY (attacker_type_id, defender_type_id)
+-- =====================================================
+-- TABLE: Team
+-- =====================================================
+CREATE TABLE team (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    visibility VARCHAR(20) NOT NULL CHECK (visibility IN ('PUBLIC', 'PRIVATE')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- =====================================================
+-- TABLE: TeamPokemon
+-- =====================================================
+CREATE TABLE team_pokemon (
+    team_id INT NOT NULL REFERENCES team(id) ON DELETE CASCADE,
+    pokemon_id INT NOT NULL REFERENCES pokemon(id) ON DELETE CASCADE,
+    slot INT NOT NULL CHECK (slot BETWEEN 1 AND 6),
+    PRIMARY KEY (team_id, slot)
+);
+
+
+-- =====================================================
+-- Indexes
+-- =====================================================
 CREATE INDEX idx_user_email ON app_user(email);
 CREATE INDEX idx_user_username ON app_user(username);
 
