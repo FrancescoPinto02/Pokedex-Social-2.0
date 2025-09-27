@@ -1,6 +1,9 @@
 package com.pokedexsocial.backend.service;
 
 import com.pokedexsocial.backend.exception.PokemonNotFoundException;
+import com.pokedexsocial.backend.model.Type;
+import com.pokedexsocial.backend.model.TypeEffectiveness;
+import com.pokedexsocial.backend.repository.TypeEffectivenessRepository;
 import com.pokedexsocial.backend.specification.PokemonSearchCriteria;
 import com.pokedexsocial.backend.dto.AbilityDto;
 import com.pokedexsocial.backend.dto.AbilityListDto;
@@ -21,7 +24,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing Pokémon.
@@ -33,16 +39,13 @@ public class PokemonService {
     private final PokemonRepository pokemonRepository;
     private final TypeRepository typeRepository;
     private final AbilityRepository abilityRepository;
+    private final TypeEffectivenessRepository effectivenessRepository;
 
-    /**
-     * Constructor.
-     *
-     * @param pokemonRepository the Pokémon repository
-     */
-    public PokemonService(PokemonRepository pokemonRepository, TypeRepository typeRepository, AbilityRepository abilityRepository) {
+    public PokemonService(PokemonRepository pokemonRepository, TypeRepository typeRepository, AbilityRepository abilityRepository, TypeEffectivenessRepository effectivenessRepository) {
         this.pokemonRepository = pokemonRepository;
         this.typeRepository = typeRepository;
         this.abilityRepository = abilityRepository;
+        this.effectivenessRepository = effectivenessRepository;
     }
 
     /**
@@ -53,37 +56,97 @@ public class PokemonService {
      * @throws PokemonNotFoundException if the Pokémon is not found
      */
     public PokemonDto getPokemonById(Integer id) {
-        Pokemon p = pokemonRepository.findById(id)
-                .orElseThrow(() -> new PokemonNotFoundException("Pokemon with id " + id + " not found"));
+        Pokemon pokemon = pokemonRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pokemon not found with id " + id));
 
-        return new PokemonDto(
-                p.getId(),
-                p.getNdex(),
-                p.getSpecies(),
-                p.getForme(),
-                p.getDex1(),
-                p.getDex2(),
-                p.getType1() != null ? new TypeDto(p.getType1().getId(), p.getType1().getName()) : null,
-                p.getType2() != null ? new TypeDto(p.getType2().getId(), p.getType2().getName()) : null,
-                p.getAbility1() != null ? new AbilityDto(p.getAbility1().getId(), p.getAbility1().getName(), p.getAbility1().getDescription()) : null,
-                p.getAbility2() != null ? new AbilityDto(p.getAbility2().getId(), p.getAbility2().getName(), p.getAbility2().getDescription()) : null,
-                p.getHiddenAbility() != null ? new AbilityDto(p.getHiddenAbility().getId(), p.getHiddenAbility().getName(), p.getHiddenAbility().getDescription()) : null,
-                p.getHp(),
-                p.getAttack(),
-                p.getDefense(),
-                p.getSpattack(),
-                p.getSpdefense(),
-                p.getSpeed(),
-                p.getTotal(),
-                p.getWeight(),
-                p.getHeight(),
-                p.getPokemonClass(),
-                p.getPercentMale(),
-                p.getPercentFemale(),
-                p.getEggGroup1(),
-                p.getEggGroup2(),
-                p.getImageUrl()
-        );
+        PokemonDto dto = new PokemonDto();
+        dto.setId(pokemon.getId());
+        dto.setNdex(pokemon.getNdex());
+        dto.setSpecies(pokemon.getSpecies());
+        dto.setForme(pokemon.getForme());
+        dto.setDex1(pokemon.getDex1());
+        dto.setDex2(pokemon.getDex2());
+
+        dto.setHp(pokemon.getHp());
+        dto.setAttack(pokemon.getAttack());
+        dto.setDefense(pokemon.getDefense());
+        dto.setSpattack(pokemon.getSpattack());
+        dto.setSpdefense(pokemon.getSpdefense());
+        dto.setSpeed(pokemon.getSpeed());
+        dto.setTotal(pokemon.getTotal());
+
+        dto.setWeight(pokemon.getWeight() != null ? pokemon.getWeight().doubleValue() : null);
+        dto.setHeight(pokemon.getHeight() != null ? pokemon.getHeight().doubleValue() : null);
+
+        dto.setPokemonClass(pokemon.getPokemonClass());
+        dto.setPercentMale(pokemon.getPercentMale() != null ? pokemon.getPercentMale().doubleValue() : null);
+        dto.setPercentFemale(pokemon.getPercentFemale() != null ? pokemon.getPercentFemale().doubleValue() : null);
+
+        dto.setEggGroup1(pokemon.getEggGroup1());
+        dto.setEggGroup2(pokemon.getEggGroup2());
+        dto.setImageUrl(pokemon.getImageUrl());
+
+        // Types
+        if (pokemon.getType1() != null) {
+            dto.setType1(new TypeDto(pokemon.getType1().getId(), pokemon.getType1().getName()));
+        }
+        if (pokemon.getType2() != null) {
+            dto.setType2(new TypeDto(pokemon.getType2().getId(), pokemon.getType2().getName()));
+        }
+
+        // Abilities
+        if (pokemon.getAbility1() != null) {
+            dto.setAbility1(new AbilityDto(
+                    pokemon.getAbility1().getId(),
+                    pokemon.getAbility1().getName(),
+                    pokemon.getAbility1().getDescription()
+            ));
+        }
+        if (pokemon.getAbility2() != null) {
+            dto.setAbility2(new AbilityDto(
+                    pokemon.getAbility2().getId(),
+                    pokemon.getAbility2().getName(),
+                    pokemon.getAbility2().getDescription()
+            ));
+        }
+        if (pokemon.getHiddenAbility() != null) {
+            dto.setHiddenAbility(new AbilityDto(
+                    pokemon.getHiddenAbility().getId(),
+                    pokemon.getHiddenAbility().getName(),
+                    pokemon.getHiddenAbility().getDescription()
+            ));
+        }
+
+        // Calcolo moltiplicatori (come prima)
+        Map<String, Double> multipliers = new HashMap<>();
+        List<TypeEffectiveness> allAttacks = new ArrayList<>();
+        allAttacks.addAll(effectivenessRepository.findByDefenderType(pokemon.getType1()));
+        if (pokemon.getType2() != null) {
+            allAttacks.addAll(effectivenessRepository.findByDefenderType(pokemon.getType2()));
+        }
+
+        for (TypeEffectiveness te : allAttacks) {
+            String attackerName = te.getAttackerType().getName();
+            multipliers.merge(attackerName, te.getMultiplier().doubleValue(), (oldVal, newVal) -> oldVal * newVal);
+        }
+
+        Map<String, Double> weaknesses = multipliers.entrySet().stream()
+                .filter(e -> e.getValue() > 1.0)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        Map<String, Double> resistances = multipliers.entrySet().stream()
+                .filter(e -> e.getValue() > 0.0 && e.getValue() < 1.0)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        Map<String, Double> neutral = multipliers.entrySet().stream()
+                .filter(e -> e.getValue() == 1.0)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        dto.setWeaknesses(weaknesses);
+        dto.setResistances(resistances);
+        dto.setNeutral(neutral);
+
+        return dto;
     }
 
     /**

@@ -72,6 +72,13 @@ CREATE TABLE app_user (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+CREATE TABLE type_effectiveness (
+    attacker_type_id INT NOT NULL REFERENCES type(id) ON DELETE CASCADE,
+    defender_type_id INT NOT NULL REFERENCES type(id) ON DELETE CASCADE,
+    multiplier NUMERIC(2,1) NOT NULL CHECK (multiplier IN (0, 0.5, 1, 2)),
+    PRIMARY KEY (attacker_type_id, defender_type_id)
+);
+
 CREATE INDEX idx_user_email ON app_user(email);
 CREATE INDEX idx_user_username ON app_user(username);
 
