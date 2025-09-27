@@ -127,4 +127,16 @@ public class GlobalExceptionHandler {
                 request
         );
     }
+
+    /** Handles invalid user operations (400) */
+    @ExceptionHandler(InvalidUserOperationException.class)
+    public ProblemDetail handleInvalidUserOperation(InvalidUserOperationException ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.BAD_REQUEST,
+                "Invalid User Operation",
+                ex.getMessage(),
+                "https://example.com/probs/invalid-user-operation",
+                request
+        );
+    }
 }

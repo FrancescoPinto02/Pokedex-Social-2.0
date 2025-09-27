@@ -23,7 +23,7 @@ public class FilterConfig {
     public FilterRegistrationBean<JwtAuthFilter> jwtAuthFilter() {
         FilterRegistrationBean<JwtAuthFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new JwtAuthFilter(jwtUtil));
-        registration.addUrlPatterns("/user/*");
+        registration.addUrlPatterns("/user/*", "/teams/*");
         registration.setOrder(1);
         return registration;
     }
