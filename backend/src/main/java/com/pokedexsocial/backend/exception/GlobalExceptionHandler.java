@@ -139,4 +139,16 @@ public class GlobalExceptionHandler {
                 request
         );
     }
+
+    /** Handles errors during the genetic optimization process */
+    @ExceptionHandler(CloneNotSupportedException.class)
+    public ProblemDetail handleCloneNotSupported(CloneNotSupportedException ex, WebRequest request) {
+        return buildProblemDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Genetic Algorithm Error",
+                ex.getMessage(),
+                "https://example.com/probs/genetic-error",
+                request
+        );
+    }
 }

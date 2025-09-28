@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Repository interface for Pokémon entities.
@@ -33,4 +34,9 @@ public interface PokemonRepository extends JpaRepository<Pokemon, Integer>, JpaS
 
     @Query("SELECT MAX(p.height) FROM Pokemon p")
     BigDecimal findMaxHeight();
+
+    @Query("SELECT p FROM Pokemon p " +
+            "JOIN FETCH p.type1 " +
+            "LEFT JOIN FETCH p.type2")
+    List<Pokemon> findAllWithTypes();
 }
