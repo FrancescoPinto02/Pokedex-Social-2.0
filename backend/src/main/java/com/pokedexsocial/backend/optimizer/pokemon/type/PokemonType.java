@@ -21,7 +21,7 @@ public class PokemonType {
     }
 
     public PokemonType(PokemonTypeName name) {
-        this(name, new HashMap<>(), new HashMap<>());
+        this(name, new HashMap<PokemonTypeName, Double>(), new HashMap<PokemonTypeName, Double>());
     }
 
 

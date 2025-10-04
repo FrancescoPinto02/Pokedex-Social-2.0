@@ -71,7 +71,7 @@ public class AuthService {
         user.setPokecoin(0L);
         user.setRole("USER");
 
-        userRepository.save(user);
+        User saved = userRepository.save((User) user);
 
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         return new AuthResponse(token, user.getId(), user.getUsername());

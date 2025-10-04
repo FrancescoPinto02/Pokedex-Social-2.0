@@ -13,8 +13,8 @@ import java.util.Map;
 
 @Component("pokemonTeamFitnessFunction")
 public class PokemonTeamFitnessFunction extends FitnessFunction<PokemonTeamGA> {
-    private static final double MIN_FITNESS = 0;
-    private static final double MAX_FITNESS = 100;
+    private static final double MIN_FITNESS = 0.0;
+    private static final double MAX_FITNESS = 100.0;
 
     @Value("${pokemon.fitness.weights.low:0.5}")
     private double LOW_WEIGHT;

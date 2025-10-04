@@ -67,8 +67,8 @@ public class PokemonTypePool {
 
         // Crea e aggiungi tutti i PokemonType al Set
         for (PokemonTypeName typeName : idToName.values()) {
-            Map<PokemonTypeName, Double> offensiveProps = offensiveMap.getOrDefault(typeName, new HashMap<>());
-            Map<PokemonTypeName, Double> defensiveProps = defensiveMap.getOrDefault(typeName, new HashMap<>());
+            Map<PokemonTypeName, Double> offensiveProps = offensiveMap.getOrDefault(typeName, new HashMap<PokemonTypeName, Double>());
+            Map<PokemonTypeName, Double> defensiveProps = defensiveMap.getOrDefault(typeName, new HashMap<PokemonTypeName, Double>());
 
             types.add(new PokemonType(typeName, offensiveProps, defensiveProps));
         }

@@ -26,9 +26,8 @@ public class RouletteWheelSelection <T extends Individual> extends SelectionOper
     @Override
     public Population<T> apply(Population<T> population, Random rand) throws CloneNotSupportedException {
         double totalFitness = population.stream()
-                .map(Individual::getFitness)
-                .reduce(Double::sum)
-                .orElse(0.0);
+                .mapToDouble(i -> i.getFitness())
+                .sum();
         // This should happen for empty populations only
         if (totalFitness == 0.0) {
             return population;
