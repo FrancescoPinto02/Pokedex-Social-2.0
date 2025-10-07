@@ -3,6 +3,7 @@ package com.pokedexsocial.backend.optimizer.ga.operators.crossover;
 import com.pokedexsocial.backend.optimizer.ga.individuals.Individual;
 import com.pokedexsocial.backend.optimizer.ga.operators.GeneticOperator;
 import com.pokedexsocial.backend.optimizer.ga.population.Population;
+import com.pokedexsocial.backend.optimizer.ga.utils.GAUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,13 +34,12 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
 
     /*@
       @ requires population != null;
+      @ requires population.id >= 0;
       @ requires population.size() > 0;
+      @ requires (\forall T ind; population.contains(ind); ind != null && ind.fitness >= 0);
       @
       @ ensures \result != null;
-      @ ensures (\forall int i; 0 <= i && i < \result.size();
-      @            \result.get(i) != null &&
-      @            \result.get(i).firstParent != null &&
-      @            \result.get(i).secondParent != null);
+      @ ensures (\forall int i; 0 <= i && i < \result.size(); \result.get(i) != null && \result.get(i).firstParent != null && \result.get(i).secondParent != null);
       @
       @ // Se la popolazione ha un solo individuo il risultato deve avere una coppia
       @ ensures population.size() == 1 ==> \result.size() == 1;
@@ -49,20 +49,23 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
       @ ensures population.size() >= 2 ==> \result.size() == population.size() / 2;
       @
       @ // Il risultato deve contenere solo individui che appartengono anche alla popolazione
-      @ ensures (\forall int i; 0 <= i && i < \result.size();
-      @            population.contains(\result.get(i).firstParent) &&
-      @            population.contains(\result.get(i).secondParent));
+      @ ensures (\forall int i; 0 <= i && i < \result.size(); population.contains(\result.get(i).firstParent) && population.contains(\result.get(i).secondParent));
       @*/
     protected List<Pairing> makeRandomPairings(Population<T> population) {
         List<Pairing> pairings = new ArrayList<>();
-        ArrayList<T> populationList = new ArrayList<>(population);
+        ArrayList<T> populationList = new ArrayList<>();
+        int size = population.size();
+        for (T ind : population) {
+            populationList.add(ind);
+        }
+
         if (population.size() < 2) {
             T loneIndividual = populationList.get(0);
             Pairing pairing = new Pairing(loneIndividual, loneIndividual);
             pairings.add(pairing);
             //@ assert pairings.size() == 1;
         } else {
-            Collections.shuffle(populationList);
+            // Collections.shuffle(populationList);
             if (populationList.size() % 2 != 0) {
                 populationList.remove(populationList.size() - 1);
             }
@@ -85,6 +88,8 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
             }
             //@ assert pairings.size() == popSize / 2;
         }
+
+        //@ show pairings.size(), population.size(), populationList.size();
         return pairings;
     }
 }

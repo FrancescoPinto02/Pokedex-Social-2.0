@@ -23,5 +23,5 @@ public enum PokemonTypeName {
     DRAGON, //Tipo Drago
     DARK, //Tipo Buio
     FAIRY, //Tipo Fata
-    UNDEFINED //Tipo non definito (utilizzato per gestire valori null)
+    UNDEFINED; //Tipo non definito (utilizzato per gestire valori null)
 }

@@ -8,11 +8,6 @@ import com.pokedexsocial.backend.optimizer.ga.operators.mutation.MutationOperato
 import com.pokedexsocial.backend.optimizer.ga.operators.selection.SelectionOperator;
 import com.pokedexsocial.backend.optimizer.ga.population.Population;
 import com.pokedexsocial.backend.optimizer.ga.results.Results;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,17 +22,38 @@ import java.util.Stack;
  * @param <T> tipo dell'individuo (es. PokemonTeamGA)
  */
 public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorithm<T> {
+    //@ spec_public
+    private final double mutationProbability;
+    //@ spec_public
+    private final int maxIterations;
+    //@ spec_public
+    private final int maxIterationsNoImprovements;
 
-    private static final Logger logger = (Logger) LoggerFactory.getLogger(SimpleGeneticAlgorithm.class);
+    /*@
+      @ public invariant 0.0 <= mutationProbability && mutationProbability <= 1.0;
+      @ public invariant maxIterations >= 1;
+      @ public invariant maxIterationsNoImprovements >= 0;
+      @*/
 
-    private final double mutationProbability; // Probabilità di applicare la mutazione
-    private final int maxIterations; // Numero massimo di generazioni
-    private final int maxIterationsNoImprovements; // Numero massimo di generazioni senza miglioramenti
-
-    /**
-     * Costruttore iniettabile da Spring.
-     * Tutti i parametri numerici sono configurabili da application.yml.
-     */
+    /*@
+      @ requires fitnessFunction != null;
+      @ requires initializer != null;
+      @ requires selectionOperator != null;
+      @ requires crossoverOperator != null;
+      @ requires mutationOperator != null;
+      @ requires mutationProbability >= 0.0 && mutationProbability <= 1.0;
+      @ requires maxIterations >= 1;
+      @ requires maxIterationsNoImprovements >= 0;
+      @
+      @ ensures this.getFitnessFunction() == fitnessFunction;
+      @ ensures this.getInitializer() == initializer;
+      @ ensures this.getSelectionOperator() == selectionOperator;
+      @ ensures this.getCrossoverOperator() == crossoverOperator;
+      @ ensures this.getMutationOperator() == mutationOperator;
+      @ ensures this.mutationProbability >= 0.0 && this.mutationProbability <= 1.0;
+      @ ensures this.maxIterations >= 1;
+      @ ensures this.maxIterationsNoImprovements >= 0;
+      @*/
     public SimpleGeneticAlgorithm(
             FitnessFunction<T> fitnessFunction,
             Initializer<T> initializer,
@@ -50,9 +66,8 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
     ) {
         super(fitnessFunction, initializer, selectionOperator, crossoverOperator, mutationOperator);
 
-        // Valida parametri
+        // Validazione parametri con fallback
         if (mutationProbability < 0.0 || mutationProbability > 1.0) {
-            logger.warn("⚠️ Valore non valido per mutationProbability ({}). Impostato a 1.0.", mutationProbability);
             this.mutationProbability = 1.0;
         } else {
             this.mutationProbability = mutationProbability;
@@ -60,22 +75,25 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
 
         this.maxIterations = Math.max(maxIterations, 1);
         this.maxIterationsNoImprovements = Math.max(maxIterationsNoImprovements, 0);
-
-        logger.info("⚙️ SimpleGeneticAlgorithm inizializzato | mutationProbability={} | maxIterations={} | maxIterationsNoImprovements={}",
-                this.mutationProbability, this.maxIterations, this.maxIterationsNoImprovements);
     }
 
-    /**
-     * Esegue il ciclo evolutivo principale.
-     *
-     * @return i risultati dell'esecuzione (generazioni, log, best team, ecc.)
-     */
+    /*@ also
+      @ public normal_behavior
+      @ requires getInitializer() != null && getFitnessFunction() != null;
+      @ requires getSelectionOperator() != null && getCrossoverOperator() != null && getMutationOperator() != null;
+      @
+      @ // il risultato dell'algoritmo è sempre valido
+      @ ensures \result != null;
+      @ // la generazione migliore è sempre presente
+      @ ensures \result.getBestGeneration() != null;
+      @ // esiste sempre un individuo migliore
+      @ ensures \result.getBestGeneration().getBestIndividual() != null;
+      @
+      @ also
+      @ signals (CloneNotSupportedException e) true;
+      @*/
     @Override
     public Results<T> run() throws CloneNotSupportedException {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        logger.info("🚀 Avvio algoritmo genetico | maxIterations={} | mutationProbability={}", maxIterations, mutationProbability);
 
         Random rand = new Random();
         List<String> logEntries = new ArrayList<>();
@@ -86,7 +104,6 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
         getFitnessFunction().evaluate(firstGeneration);
         generations.push(firstGeneration);
 
-        logEntries.add("Gen 1) AvgFitness=" + firstGeneration.getAverageFitness());
         Population<T> bestGeneration = firstGeneration;
 
         int iterations = 1;
@@ -94,8 +111,16 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
         boolean stopEarly = false;
 
         // 2️⃣ Ciclo principale
+        /*@
+          @ loop_invariant generations != null;
+          @ loop_invariant !generations.isEmpty();
+          @ loop_invariant bestGeneration != null;
+          @ loop_invariant iterations >= 1 && iterations <= maxIterations;
+          @ loop_invariant iterationsNoImprovements >= 0 && iterationsNoImprovements <= iterations;
+          @ loop_invariant (\forall int i; 0 <= i < generations.size(); generations.get(i) != null);
+          @ decreasing maxIterations - iterations;
+          @*/
         do {
-            StringBuilder logEntry = new StringBuilder("Gen ").append(iterations + 1).append(") ");
             Population<T> currentGeneration = generations.peek();
 
             // Selezione
@@ -114,12 +139,7 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
             generations.push(newGeneration);
             iterations++;
 
-            double bestAvgFitness = bestGeneration.getAverageFitness();
-            double newAvgFitness = newGeneration.getAverageFitness();
-
-            logEntry.append("AvgFitness=").append(newAvgFitness).append(" | BestSoFar=").append(bestAvgFitness);
-
-            // 3️⃣ Controlla miglioramento
+            // Controllo miglioramento fitness
             boolean improved =
                     (getFitnessFunction().isMaximum() && newGeneration.compareTo(bestGeneration) > 0)
                             || (!getFitnessFunction().isMaximum() && newGeneration.compareTo(bestGeneration) < 0);
@@ -127,36 +147,34 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
             if (improved) {
                 bestGeneration = newGeneration;
                 iterationsNoImprovements = 0;
-                logEntry.append(" ✅ Improvement");
             } else {
                 iterationsNoImprovements++;
                 stopEarly = (maxIterationsNoImprovements > 0 && iterationsNoImprovements >= maxIterationsNoImprovements);
-                if (stopEarly) {
-                    logEntry.append(" ⏹️ Early stop (no improvements for ").append(iterationsNoImprovements).append(" generations)");
-                }
             }
 
-            logEntries.add(logEntry.toString());
-
         } while (iterations < maxIterations && !stopEarly);
-
-        timer.stop();
-        logger.info("🏁 GA completato in {} ms | Generazioni totali: {} | Migliore fitness: {}",
-                timer.getTotalTimeMillis(), iterations, bestGeneration.getBestIndividual().getFitness());
 
         return new Results<>(this, generations, bestGeneration, logEntries);
     }
 
-    // Getters
-    public double getMutationProbability() {
+    /*@ public normal_behavior
+      @ ensures 0.0 <= \result && \result <= 1.0;
+      @*/
+    public /*@ pure @*/ double getMutationProbability() {
         return mutationProbability;
     }
 
-    public int getMaxIterations() {
+    /*@ public normal_behavior
+      @ ensures \result >= 1;
+      @*/
+    public /*@ pure @*/ int getMaxIterations() {
         return maxIterations;
     }
 
-    public int getMaxIterationsNoImprovements() {
+    /*@ public normal_behavior
+      @ ensures \result >= 0;
+      @*/
+    public /*@ pure @*/ int getMaxIterationsNoImprovements() {
         return maxIterationsNoImprovements;
     }
 }
