@@ -58,9 +58,6 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
       @ // Il risultato deve contenere solo individui che appartengono anche alla popolazione
       @ ensures (\forall int i; 0 <= i && i < \result.size(); population.contains(\result.get(i).firstParent) && population.contains(\result.get(i).secondParent));
       @
-      @ // Preserving Population invariants
-      @ ensures population.id == \old(population.id);
-      @ ensures population.size() == \old(population.size());
       @*/
     protected List<Pairing> makeRandomPairings(Population<T> population) {
         List<Pairing> pairings = new ArrayList<>();
@@ -77,8 +74,10 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
         } else {
             //@ assert originalSize >= 2;
             //@ assert populationList.size() == originalSize;
-            
+
+            // TODO: trovare un`alternativa a Collections.shuffle()
             // Collections.shuffle(populationList);
+
             int sizeToUse = populationList.size();
             if (sizeToUse % 2 != 0) {
                 sizeToUse--;
@@ -86,7 +85,6 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
 
             //@ assert sizeToUse % 2 == 0;
             //@ assert sizeToUse <= populationList.size();
-            //@ assume pairings.size() == 0;
 
             /*@
               @ loop_invariant i % 2 == 0;

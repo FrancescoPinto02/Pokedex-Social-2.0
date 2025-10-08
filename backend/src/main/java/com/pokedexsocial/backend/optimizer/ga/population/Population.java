@@ -66,10 +66,10 @@ public abstract class Population<T extends Individual> extends HashSet<T> implem
 
 
     /*@ public normal_behavior
-      @   assignable \nothing;
       @   requires this.size() <= Integer.MAX_VALUE;
       @   requires (\forall T ind; this.contains(ind); ind != null && ind.fitness >= 0);
       @
+      @   assignable \nothing;
       @
       @   //Media 0 se la popolazione è vuota
       @   ensures this.isEmpty() ==> \result == 0.0;
@@ -85,9 +85,12 @@ public abstract class Population<T extends Individual> extends HashSet<T> implem
         //@ maintaining 0 <= \count <= size;
         //@ maintaining sum >= 0.0;
         //@ maintaining \forall T x; this.contains(x); x != null && x.fitness >= 0;
+        //@ maintaining (\forall T x; \old(this.contains(x)); this.contains(x));
         //@ loop_writes sum;
         //@ decreases size - \count;
         for (T ind : this) {
+            //@ assert ind!=null;
+            //@ assert ind.fitness>=0;
             sum += ind.getFitness();
         }
 
