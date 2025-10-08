@@ -17,7 +17,9 @@ import java.util.List;
 public abstract class CrossoverOperator<T extends Individual> extends GeneticOperator<T> {
 
     class Pairing {
+        //@ spec_public
         protected final T firstParent;
+        //@ spec_public
         protected final T secondParent;
 
         /*@
@@ -52,32 +54,52 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
       @ ensures (\forall int i; 0 <= i && i < \result.size(); population.contains(\result.get(i).firstParent) && population.contains(\result.get(i).secondParent));
       @*/
     protected List<Pairing> makeRandomPairings(Population<T> population) {
+        //@ assume population.size() > 0;
         List<Pairing> pairings = new ArrayList<>();
         ArrayList<T> populationList = new ArrayList<>();
-        int size = population.size();
-        for (T ind : population) {
+        final int originalSize = population.size();
+        
+        /*@
+          @ maintaining populationList != null;
+          @ maintaining populationList.size() <= originalSize;
+          @*/
+        for (T ind : population){
+            //@ assume ind != null && ind.fitness>=0;
             populationList.add(ind);
+            //@ assert populationList.size() <= originalSize;
         }
-
-        if (population.size() < 2) {
+        
+        //@ assume populationList.size() == originalSize;
+        
+        if (originalSize < 2) {
+            //@ assert originalSize == 1;
             T loneIndividual = populationList.get(0);
             Pairing pairing = new Pairing(loneIndividual, loneIndividual);
             pairings.add(pairing);
             //@ assert pairings.size() == 1;
+            //@ assert originalSize == 1 ==> pairings.size() == 1;
         } else {
+            //@ assert originalSize >= 2;
+            //@ assert populationList.size() == originalSize;
+            
             // Collections.shuffle(populationList);
+            //@ assume populationList.size() > 0;
             if (populationList.size() % 2 != 0) {
                 populationList.remove(populationList.size() - 1);
             }
 
             int popSize = populationList.size();
-            //@ //Necessario perchè si utilizza Shuffle
+            //@ assert popSize >= originalSize - 1;
+            //@ assert popSize % 2 == 0;
             //@ assume pairings.size() == 0;
 
             /*@
               @ loop_invariant i % 2 == 0;
               @ loop_invariant 0 <= i && i <= popSize;
               @ loop_invariant pairings.size() == i / 2;
+              @ loop_invariant (\forall int j; 0 <= j && j < pairings.size(); 
+              @                population.contains(pairings.get(j).firstParent) && 
+              @                population.contains(pairings.get(j).secondParent));
               @ decreases popSize / 2 - i / 2;
               @*/
             for (int i = 0; i < popSize; i = i + 2) {
@@ -87,9 +109,11 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
                 pairings.add(pairing);
             }
             //@ assert pairings.size() == popSize / 2;
+            //@ assert originalSize >= 2 ==> pairings.size() == originalSize / 2;
         }
 
-        //@ show pairings.size(), population.size(), populationList.size();
+        //@ show pairings.size();
+        //@ assert (originalSize < 2 ==> pairings.size() == 1) && (originalSize >= 2 ==> pairings.size() == originalSize / 2);
         return pairings;
     }
 }
