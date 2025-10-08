@@ -63,12 +63,9 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
       @ ensures population.size() == \old(population.size());
       @*/
     protected List<Pairing> makeRandomPairings(Population<T> population) {
-        //@ assume population != null && population.id >= 0;
-        //@ assume population.size() >= 0;
         List<Pairing> pairings = new ArrayList<>();
         final int originalSize = population.size();
         ArrayList<T> populationList = new ArrayList<>(population);
-        //@ assume populationList.size() == originalSize;
         
         if (originalSize < 2) {
             //@ assert originalSize == 1;
@@ -110,7 +107,6 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
             //@ assert originalSize >= 2 ==> pairings.size() == originalSize / 2;
         }
 
-        //@ show pairings.size();
         //@ assert (originalSize < 2 ==> pairings.size() == 1) && (originalSize >= 2 ==> pairings.size() == originalSize / 2);
         return pairings;
     }

@@ -12,6 +12,7 @@ public abstract class Individual implements Comparable<Individual>, Cloneable{
 
     /*@ public normal_behavior
       @   ensures this.fitness == 0.0;
+      @ pure
       @*/
     public Individual() {
         this.fitness = 0.0;
@@ -20,6 +21,7 @@ public abstract class Individual implements Comparable<Individual>, Cloneable{
     /*@ public normal_behavior
       @   requires fitness >= 0;
       @   ensures this.fitness == fitness;
+      @ pure
       @*/
     public Individual(double fitness) {
         this.fitness = fitness;

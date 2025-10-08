@@ -15,13 +15,15 @@ public abstract class Population<T extends Individual> extends HashSet<T> implem
     /*@
       @ public invariant id >= 0;
       @ public invariant this.size() >= 0;
+      @ public invariant (\forall T ind; this.contains(ind); ind != null && ind.fitness>=0);
       @*/
 
-    /*@
-      @ requires id >= 0;
-      @ ensures this.id == id;
-      @ ensures this.bestIndividual == null;
-      @ ensures this.isEmpty();
+    /*@ public normal_behavior
+      @   requires id >= 0;
+      @   ensures this.id == id;
+      @   ensures this.bestIndividual == null;
+      @   ensures this.isEmpty();
+      @ pure
       @*/
     public Population(long id) {
         this.id = id;
@@ -86,7 +88,6 @@ public abstract class Population<T extends Individual> extends HashSet<T> implem
         //@ loop_writes sum;
         //@ decreases size - \count;
         for (T ind : this) {
-            //@ assume ind != null && ind.fitness>=0;
             sum += ind.getFitness();
         }
 
