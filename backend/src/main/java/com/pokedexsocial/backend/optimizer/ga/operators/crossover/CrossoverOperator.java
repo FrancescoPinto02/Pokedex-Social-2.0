@@ -23,10 +23,12 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
         protected final T secondParent;
 
         /*@
+          @ normal_behavior
           @ requires firstParent != null;
           @ requires secondParent != null;
           @ ensures this.firstParent == firstParent;
           @ ensures this.secondParent == secondParent;
+          @ pure
           @*/
         protected Pairing(T firstParent, T secondParent) {
             this.firstParent = firstParent;
@@ -35,10 +37,13 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
     }
 
     /*@
+      @ normal_behavior
       @ requires population != null;
       @ requires population.id >= 0;
       @ requires population.size() > 0;
       @ requires (\forall T ind; population.contains(ind); ind != null && ind.fitness >= 0);
+      @
+      @ assignable \nothing;
       @
       @ ensures \result != null;
       @ ensures (\forall int i; 0 <= i && i < \result.size(); \result.get(i) != null && \result.get(i).firstParent != null && \result.get(i).secondParent != null);
@@ -52,23 +57,17 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
       @
       @ // Il risultato deve contenere solo individui che appartengono anche alla popolazione
       @ ensures (\forall int i; 0 <= i && i < \result.size(); population.contains(\result.get(i).firstParent) && population.contains(\result.get(i).secondParent));
+      @
+      @ // Preserving Population invariants
+      @ ensures population.id == \old(population.id);
+      @ ensures population.size() == \old(population.size());
       @*/
     protected List<Pairing> makeRandomPairings(Population<T> population) {
-        //@ assume population.size() > 0;
+        //@ assume population != null && population.id >= 0;
+        //@ assume population.size() >= 0;
         List<Pairing> pairings = new ArrayList<>();
-        ArrayList<T> populationList = new ArrayList<>();
         final int originalSize = population.size();
-        
-        /*@
-          @ maintaining populationList != null;
-          @ maintaining populationList.size() <= originalSize;
-          @*/
-        for (T ind : population){
-            //@ assume ind != null && ind.fitness>=0;
-            populationList.add(ind);
-            //@ assert populationList.size() <= originalSize;
-        }
-        
+        ArrayList<T> populationList = new ArrayList<>(population);
         //@ assume populationList.size() == originalSize;
         
         if (originalSize < 2) {
@@ -83,32 +82,31 @@ public abstract class CrossoverOperator<T extends Individual> extends GeneticOpe
             //@ assert populationList.size() == originalSize;
             
             // Collections.shuffle(populationList);
-            //@ assume populationList.size() > 0;
-            if (populationList.size() % 2 != 0) {
-                populationList.remove(populationList.size() - 1);
+            int sizeToUse = populationList.size();
+            if (sizeToUse % 2 != 0) {
+                sizeToUse--;
             }
 
-            int popSize = populationList.size();
-            //@ assert popSize >= originalSize - 1;
-            //@ assert popSize % 2 == 0;
+            //@ assert sizeToUse % 2 == 0;
+            //@ assert sizeToUse <= populationList.size();
             //@ assume pairings.size() == 0;
 
             /*@
               @ loop_invariant i % 2 == 0;
-              @ loop_invariant 0 <= i && i <= popSize;
+              @ loop_invariant 0 <= i && i <= sizeToUse;
               @ loop_invariant pairings.size() == i / 2;
               @ loop_invariant (\forall int j; 0 <= j && j < pairings.size(); 
               @                population.contains(pairings.get(j).firstParent) && 
               @                population.contains(pairings.get(j).secondParent));
-              @ decreases popSize / 2 - i / 2;
+              @ decreases sizeToUse - i;
               @*/
-            for (int i = 0; i < popSize; i = i + 2) {
+            for (int i = 0; i < sizeToUse; i = i + 2) {
                 T firstParent = populationList.get(i);
                 T secondParent = populationList.get(i + 1);
                 Pairing pairing = new Pairing(firstParent, secondParent);
                 pairings.add(pairing);
             }
-            //@ assert pairings.size() == popSize / 2;
+            //@ assert pairings.size() == sizeToUse / 2;
             //@ assert originalSize >= 2 ==> pairings.size() == originalSize / 2;
         }
 
