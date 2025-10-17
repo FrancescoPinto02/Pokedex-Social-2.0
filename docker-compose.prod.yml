@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:15
+    image: francescopinto02/pokedex-db:1.0
     container_name: pokedex_db
     restart: always
     environment:
@@ -12,9 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./database/db_data:/var/lib/postgresql/data
-      - ./database/db_scripts:/docker-entrypoint-initdb.d
-      - ./database/dataset:/docker-entrypoint-initdb.d/dataset
+      - pokedex_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pokedex_user -d pokedex_db"]
       interval: 10s
@@ -22,13 +20,7 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: pokedex_backend
-    depends_on:
-      db:
-        condition: service_healthy
+    image: francescopinto02/pokedex-backend:1.0
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pokedex_db
       SPRING_DATASOURCE_USERNAME: pokedex_user
@@ -36,14 +28,18 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: pokedex_frontend
-    depends_on:
-      - backend
+    image: francescopinto02/pokedex-frontend:1.0
     ports:
       - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pokedex_data:
+
 
