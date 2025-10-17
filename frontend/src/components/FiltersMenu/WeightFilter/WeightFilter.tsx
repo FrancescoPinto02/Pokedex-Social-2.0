@@ -1,4 +1,3 @@
-import React from "react";
 import { Feather, Scale, Weight } from "lucide-react";
 import OptionCard from "../OptionCard/OptionCard";
 import styles from "./WeightFilter.module.scss";
