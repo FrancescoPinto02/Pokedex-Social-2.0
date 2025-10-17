@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./AbilityFilter.module.scss";
 
 interface AbilityOption {

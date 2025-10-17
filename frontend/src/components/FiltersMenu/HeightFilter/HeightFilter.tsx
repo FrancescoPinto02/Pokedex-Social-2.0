@@ -1,4 +1,3 @@
-import React from "react";
 import { ArrowDown, MoveVertical, ArrowUp } from "lucide-react";
 import OptionCard from "../OptionCard/OptionCard";
 import styles from "./HeightFilter.module.scss";

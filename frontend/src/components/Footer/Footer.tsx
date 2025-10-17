@@ -1,4 +1,4 @@
-import { FaFacebookF, FaTwitter, FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import styles from "./Footer.module.scss";
 
@@ -21,7 +21,7 @@ const Footer = () => {
 
       {/* Social Icons */}
       <div className={styles.social}>
-        <a href="#" aria-label="Facebook"><FaFacebookF /></a>
+        <a href="#" aria-label="Facebook"><FaFacebook /></a>
         <a href="https://www.linkedin.com/in/francescoalessandropinto/" aria-label="Linkedin"><FaLinkedin /></a>
         <a href="#" aria-label="Instagram"><FaInstagram /></a>
         <a href="https://github.com/FrancescoPinto02" aria-label="GitHub"><FaGithub /></a>

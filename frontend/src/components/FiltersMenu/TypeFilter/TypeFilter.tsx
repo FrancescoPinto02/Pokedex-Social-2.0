@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./TypeFilter.module.scss";
 import TypeTag from "../../Text/Type/TypeTag";
 import type { FilterOption } from "../../../types/filters/FilterOption";
