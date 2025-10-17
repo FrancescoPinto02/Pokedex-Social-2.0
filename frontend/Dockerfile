@@ -1,37 +1,30 @@
-# ---------------------------
-# STAGE 1: Build del frontend con Node
-# ---------------------------
-FROM node:20 AS build
-
+# ------------------------------
+# STAGE 1: Build stage
+# ------------------------------
+FROM node:18-alpine AS build
 WORKDIR /app
 
-# Copia i file di progetto
+# copia solo i file necessari e installa le dipendenze
 COPY package*.json ./
-
-# Installa le dipendenze
 RUN npm install
 
-# Copia il codice sorgente
+# copia il resto e builda
 COPY . .
-
-# Crea la build di produzione
+ARG VITE_API_URL=http://backend:8080
+ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
-# ---------------------------
-# STAGE 2: Servizio statico con Nginx
-# ---------------------------
-FROM nginx:1.27-alpine
+# ------------------------------
+# STAGE 2: Serve stage
+# ------------------------------
+FROM node:18-alpine AS serve
+WORKDIR /app
 
-# Rimuove la configurazione di default di Nginx
-RUN rm -rf /usr/share/nginx/html/*
+# installa serve globalmente (solo runtime)
+RUN npm install -g serve
 
-# Copia i file buildati nello spazio servito da Nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+# copia solo i file buildati (niente node_modules!)
+COPY --from=build /app/dist ./dist
 
-# Copia un file di configurazione custom per Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Espone la porta del frontend
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+CMD ["serve", "-s", "dist", "-l", "3000"]

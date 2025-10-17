@@ -35,7 +35,7 @@ services:
   frontend:
     image: francescopinto02/pokedex-frontend:1.0
     ports:
-      - "80:80"
+      - "3000:3000"
     depends_on:
       - backend
 
