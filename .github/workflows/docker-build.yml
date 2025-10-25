@@ -35,7 +35,6 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/pokedex-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/pokedex-backend:${{ github.sha }}
 
       # ------------------------
       # FRONTEND
@@ -47,7 +46,6 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/pokedex-frontend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/pokedex-frontend:${{ github.sha }}
 
       # ------------------------
       # DATABASE
@@ -59,4 +57,3 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/pokedex-db:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/pokedex-db:${{ github.sha }}
