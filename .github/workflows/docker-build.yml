@@ -5,6 +5,9 @@ on:
     workflows: ["Build and Test"]
     types:
       - completed
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-push:
