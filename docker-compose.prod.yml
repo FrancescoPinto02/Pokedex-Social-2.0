@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: francescopinto02/pokedex-db:1.0
+    image: francescopinto02/pokedex-db:latest
     container_name: pokedex_db
     restart: always
     environment:
@@ -20,7 +20,7 @@ services:
       retries: 5
 
   backend:
-    image: francescopinto02/pokedex-backend:1.0
+    image: francescopinto02/pokedex-backend:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pokedex_db
       SPRING_DATASOURCE_USERNAME: pokedex_user
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: francescopinto02/pokedex-frontend:1.0
+    image: francescopinto02/pokedex-frontend:latest
     ports:
       - "3000:3000"
     depends_on:
