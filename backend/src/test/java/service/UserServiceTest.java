@@ -12,85 +12,122 @@ import com.pokedexsocial.backend.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.nio.file.AccessDeniedException;
-import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link UserService}.
+ */
+@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
+    @Mock
     private UserRepository userRepository;
+
+    @Mock
     private BCryptPasswordEncoder passwordEncoder;
+
+    @InjectMocks
     private UserService userService;
 
+    private MockedStatic<AuthContext> authContextMock;
+
+    private final AuthenticatedUser regularUser = new AuthenticatedUser(1, "username","USER");
+    private final AuthenticatedUser adminUser = new AuthenticatedUser(99, "AdminUsername", "ADMIN");
+
     @BeforeEach
-    void setup() {
-        userRepository = mock(UserRepository.class);
-        passwordEncoder = mock(BCryptPasswordEncoder.class);
-        userService = new UserService(userRepository, passwordEncoder);
+    void setUp() {
+        authContextMock = Mockito.mockStatic(AuthContext.class);
     }
 
     @AfterEach
-    void clearContext() {
-        AuthContext.clear();
+    void tearDown() {
+        authContextMock.close();
     }
 
-    private User createUser() {
+    // region getUserInfo
+
+    /** Should return UserInfoDTO when the current user is owner. */
+    @Test
+    void getUserInfo_ShouldReturnUserInfo_WhenUserIsOwner() throws Exception {
         User user = new User();
         user.setId(1);
-        user.setUsername("ash");
-        user.setEmail("ash@example.com");
-        user.setFirstName("Ash");
-        user.setLastName("Ketchum");
-        user.setPokecoin(100L);
-        user.setBirthDate(LocalDate.of(2000, 1, 1));
-        user.setPassword("encodedOldPass");
-        return user;
-    }
-
-    // ==================== getUserInfo ====================
-
-    @Test
-    void getUserInfo_ShouldReturnInfo_WhenAuthorizedAndExists() throws Exception {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
-        User user = createUser();
+        user.setEmail("owner@example.com");
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
-        UserInfoDTO result = userService.getUserInfo(1);
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
 
-        assertThat(result.getUsername()).isEqualTo("ash");
-        verify(userRepository).findById(1);
+            UserInfoDTO result = userService.getUserInfo(1);
+
+            assertThat(result).isSameAs(dto);
+            dtoMock.verify(() -> UserInfoDTO.fromEntity(user));
+        }
     }
 
+    /** Should return UserInfoDTO when current user is ADMIN accessing another user. */
     @Test
-    void getUserInfo_ShouldThrow_WhenUserNotFound() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
+    void getUserInfo_ShouldReturnUserInfo_WhenUserIsAdmin() throws Exception {
+        User user = new User();
+        user.setId(5);
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(adminUser);
+        when(userRepository.findById(5)).thenReturn(Optional.of(user));
+
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
+
+            UserInfoDTO result = userService.getUserInfo(5);
+
+            assertThat(result).isEqualTo(dto);
+        }
+    }
+
+    /** Should throw AccessDeniedException when non-admin tries to access another user's data. */
+    @Test
+    void getUserInfo_ShouldThrowAccessDenied_WhenUserAccessesAnotherUser() {
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+
+        assertThatThrownBy(() -> userService.getUserInfo(2))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("cannot access");
+    }
+
+    /** Should throw UserNotFoundException when user not found in repository. */
+    @Test
+    void getUserInfo_ShouldThrowUserNotFound_WhenRepositoryEmpty() {
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(adminUser);
         when(userRepository.findById(1)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getUserInfo(1))
-                .isInstanceOf(UserNotFoundException.class);
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User not found");
     }
 
+    // endregion
+
+    // region deleteUser
+
+    /** Should delete user when current user is owner. */
     @Test
-    void getUserInfo_ShouldThrow_WhenAccessDenied() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(2, "misty", "USER"));
-
-        assertThatThrownBy(() -> userService.getUserInfo(1))
-                .isInstanceOf(AccessDeniedException.class);
-    }
-
-    // ==================== deleteUser ====================
-
-    @Test
-    void deleteUser_ShouldDelete_WhenAdmin() throws Exception {
-        AuthContext.setCurrentUser(new AuthenticatedUser(99, "admin", "ADMIN"));
-        User user = createUser();
+    void deleteUser_ShouldDelete_WhenUserIsOwner() throws Exception {
+        User user = new User();
+        user.setId(1);
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
         userService.deleteUser(1);
@@ -98,94 +135,233 @@ class UserServiceTest {
         verify(userRepository).delete(user);
     }
 
+    /** Should delete user when current user is ADMIN. */
     @Test
-    void deleteUser_ShouldThrow_WhenUnauthorized() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(2, "misty", "USER"));
-        assertThatThrownBy(() -> userService.deleteUser(1))
-                .isInstanceOf(AccessDeniedException.class);
+    void deleteUser_ShouldDelete_WhenUserIsAdmin() throws Exception {
+        User user = new User();
+        user.setId(2);
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(adminUser);
+        when(userRepository.findById(2)).thenReturn(Optional.of(user));
+
+        userService.deleteUser(2);
+
+        verify(userRepository).delete(user);
     }
 
+    /** Should throw AccessDeniedException when unauthorized user attempts delete. */
     @Test
-    void deleteUser_ShouldThrow_WhenUserNotFound() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
+    void deleteUser_ShouldThrowAccessDenied_WhenUnauthorized() {
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+
+        assertThatThrownBy(() -> userService.deleteUser(3))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("cannot delete");
+        verify(userRepository, never()).delete(any());
+    }
+
+    /** Should throw UserNotFoundException when user not found during delete. */
+    @Test
+    void deleteUser_ShouldThrowUserNotFound_WhenNotExists() {
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(adminUser);
         when(userRepository.findById(1)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deleteUser(1))
                 .isInstanceOf(UserNotFoundException.class);
     }
 
-    // ==================== updateUser ====================
+    // endregion
 
+    // region updateUser
+
+    /** Should update basic fields when provided. */
     @Test
-    void updateUser_ShouldUpdateFields_WhenAuthorized() throws Exception {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
-        User user = createUser();
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        UpdateUserRequest request = new UpdateUserRequest();
-        request.setFirstName("Ashura");
-        request.setEmail("ash.new@example.com");
-
-        UserInfoDTO result = userService.updateUser(1, request);
-
-        assertThat(result.getFirstName()).isEqualTo("Ashura");
-        assertThat(result.getEmail()).isEqualTo("ash.new@example.com");
-        verify(userRepository).save(any(User.class));
-    }
-
-    @Test
-    void updateUser_ShouldChangePassword_WhenOldMatches() throws Exception {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
-        User user = createUser();
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPass", "encodedOldPass")).thenReturn(true);
-        when(passwordEncoder.encode("newPass")).thenReturn("encodedNew");
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+    void updateUser_ShouldUpdateBasicFields_WhenFieldsProvided() throws Exception {
+        User user = new User();
+        user.setId(1);
+        user.setPassword("hashed");
 
         UpdateUserRequest req = new UpdateUserRequest();
-        req.setOldPassword("oldPass");
-        req.setNewPassword("newPass");
+        req.setFirstName("John");
+        req.setLastName("Doe");
+        req.setEmail("john@doe.com");
 
-        userService.updateUser(1, req);
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertThat(captor.getValue().getPassword()).isEqualTo("encodedNew");
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
+
+            UserInfoDTO result = userService.updateUser(1, req);
+
+            assertThat(result).isSameAs(dto);
+            assertThat(user.getFirstName()).isEqualTo("John");
+            assertThat(user.getLastName()).isEqualTo("Doe");
+            assertThat(user.getEmail()).isEqualTo("john@doe.com");
+        }
     }
 
+
+
+    /** Should not attempt password change when only one password field is provided. */
     @Test
-    void updateUser_ShouldThrow_WhenOldPasswordIncorrect() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
-        User user = createUser();
+    void updateUser_ShouldSkipPasswordChange_WhenIncompletePasswordFields() throws Exception {
+        User user = new User();
+        user.setId(1);
+        user.setPassword("encodedOld");
+
+        // Only old password provided, missing newPassword
+        UpdateUserRequest req = new UpdateUserRequest();
+        req.setOldPassword("old");
+
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "encodedOldPass")).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
+
+            UserInfoDTO result = userService.updateUser(1, req);
+
+            assertThat(result).isSameAs(dto);
+            // Password should remain unchanged
+            assertThat(user.getPassword()).isEqualTo("encodedOld");
+
+            // passwordEncoder should not be used
+            verify(passwordEncoder, never()).matches(anyString(), anyString());
+            verify(passwordEncoder, never()).encode(anyString());
+        }
+    }
+
+    /** Should change password when oldPassword matches. */
+    @Test
+    void updateUser_ShouldChangePassword_WhenOldPasswordMatches() throws Exception {
+        User user = new User();
+        user.setId(1);
+        user.setPassword("encodedOld");
+
+        UpdateUserRequest req = new UpdateUserRequest();
+        req.setOldPassword("old");
+        req.setNewPassword("new");
+
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("old", "encodedOld")).thenReturn(true);
+        when(passwordEncoder.encode("new")).thenReturn("encodedNew");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
+
+            UserInfoDTO result = userService.updateUser(1, req);
+
+            assertThat(result).isEqualTo(dto);
+            assertThat(user.getPassword()).isEqualTo("encodedNew");
+        }
+    }
+
+    /** Should throw InvalidUserOperationException when old password is incorrect. */
+    @Test
+    void updateUser_ShouldThrowInvalidOperation_WhenOldPasswordIncorrect() {
+        User user = new User();
+        user.setId(1);
+        user.setPassword("encodedOld");
 
         UpdateUserRequest req = new UpdateUserRequest();
         req.setOldPassword("wrong");
         req.setNewPassword("new");
 
-        assertThatThrownBy(() -> userService.updateUser(1, req))
-                .isInstanceOf(InvalidUserOperationException.class);
-    }
-
-    @Test
-    void updateUser_ShouldThrow_WhenUnauthorized() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(2, "misty", "USER"));
-        UpdateUserRequest req = new UpdateUserRequest();
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong", "encodedOld")).thenReturn(false);
 
         assertThatThrownBy(() -> userService.updateUser(1, req))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(InvalidUserOperationException.class)
+                .hasMessageContaining("Old password is incorrect");
     }
 
+    /** Should throw AccessDeniedException when unauthorized user attempts update. */
     @Test
-    void updateUser_ShouldThrow_WhenUserNotFound() {
-        AuthContext.setCurrentUser(new AuthenticatedUser(1, "ash", "USER"));
+    void updateUser_ShouldThrowAccessDenied_WhenUnauthorized() {
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+
+        assertThatThrownBy(() -> userService.updateUser(5, new UpdateUserRequest()))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("cannot update");
+    }
+
+    /** Should throw UserNotFoundException when repository returns empty. */
+    @Test
+    void updateUser_ShouldThrowUserNotFound_WhenRepositoryEmpty() {
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(adminUser);
         when(userRepository.findById(1)).thenReturn(Optional.empty());
 
-        UpdateUserRequest req = new UpdateUserRequest();
-
-        assertThatThrownBy(() -> userService.updateUser(1, req))
+        assertThatThrownBy(() -> userService.updateUser(1, new UpdateUserRequest()))
                 .isInstanceOf(UserNotFoundException.class);
     }
+
+    /** Should not update any basic fields when request fields are null. */
+    @Test
+    void updateUser_ShouldNotChangeFields_WhenRequestFieldsAreNull() throws Exception {
+        User user = new User();
+        user.setId(1);
+        user.setFirstName("Alice");
+        user.setLastName("Wonderland");
+        user.setEmail("alice@wonder.com");
+        user.setPassword("encodedOld");
+
+        UpdateUserRequest req = new UpdateUserRequest(); // tutti i campi null
+
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
+
+            UserInfoDTO result = userService.updateUser(1, req);
+
+            assertThat(result).isSameAs(dto);
+
+            // 🔥 qui uccidiamo i mutanti: verifichiamo che i valori non cambino
+            assertThat(user.getFirstName()).isEqualTo("Alice");
+            assertThat(user.getLastName()).isEqualTo("Wonderland");
+            assertThat(user.getEmail()).isEqualTo("alice@wonder.com");
+        }
+    }
+
+    @Test
+    void updateUser_ShouldSkipPasswordChange_WhenOnlyNewPasswordProvided() throws Exception {
+        User user = new User();
+        user.setId(1);
+        user.setPassword("encodedOld");
+
+        // Solo newPassword valorizzata
+        UpdateUserRequest req = new UpdateUserRequest();
+        req.setNewPassword("newOnly");
+
+        authContextMock.when(AuthContext::getCurrentUser).thenReturn(regularUser);
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        try (MockedStatic<UserInfoDTO> dtoMock = Mockito.mockStatic(UserInfoDTO.class)) {
+            UserInfoDTO dto = new UserInfoDTO();
+            dtoMock.when(() -> UserInfoDTO.fromEntity(user)).thenReturn(dto);
+
+            UserInfoDTO result = userService.updateUser(1, req);
+
+            assertThat(result).isSameAs(dto);
+            assertThat(user.getPassword()).isEqualTo("encodedOld");
+
+            // Verifica che nessuna chiamata al passwordEncoder sia avvenuta
+            verify(passwordEncoder, never()).matches(anyString(), anyString());
+            verify(passwordEncoder, never()).encode(anyString());
+        }
+    }
+
+    // endregion
 }
