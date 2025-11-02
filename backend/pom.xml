@@ -150,8 +150,7 @@
                         <param>com.pokedexsocial.backend.service.*</param>
                         <param>com.pokedexsocial.backend.security.*</param>
                         <param>com.pokedexsocial.backend.util.*</param>
-                        <param>com.pokedexsocial.backend.optimizer.pokemon.core.*</param>
-                        <param>com.pokedexsocial.backend.optimizer.pokemon.pokedex.*</param>
+                        <param>com.pokedexsocial.backend.optimizer.pokemon.*</param>
                         <param>com.pokedexsocial.backend.optimizer.ga.fitness.*</param>
                     </targetClasses>
 
