@@ -37,98 +37,105 @@ public class PokemonGA {
     private Set<PokemonTypeName> weaknesses; //Debolezze
 
 
-    //Costruttori
-    public PokemonGA(int number, String name, PokemonType type1, PokemonType type2, int total, int hp, int attack, int defense, int specialAttack, int specialDefense, int speed, PokemonRarity rarity) {
+    // Costruttore
+    public PokemonGA(
+            int number,
+            String name,
+            PokemonType type1,
+            PokemonType type2,
+            int hp,
+            int attack,
+            int defense,
+            int specialAttack,
+            int specialDefense,
+            int speed,
+            PokemonRarity rarity
+    ) {
         this.number = number;
         this.name = name;
-        this.type1 = (type1==null) ? new PokemonType(PokemonTypeName.UNDEFINED) : type1;
-        this.type2 = (type2==null) ? new PokemonType(PokemonTypeName.UNDEFINED) : type2;
-        this.total = (total==(hp + attack + defense + specialAttack + specialDefense + speed)) ? total : (hp + attack + defense + specialAttack + specialDefense + speed);
+
+        // --- Gestione null ---
+        this.type1 = (type1 == null) ? new PokemonType(PokemonTypeName.UNDEFINED) : type1;
+        this.type2 = (type2 == null) ? new PokemonType(PokemonTypeName.UNDEFINED) : type2;
+
+        // --- Regola 1: Entrambi i tipi non possono essere UNDEFINED ---
+        if (this.type1.getName() == PokemonTypeName.UNDEFINED &&
+                this.type2.getName() == PokemonTypeName.UNDEFINED) {
+            throw new IllegalArgumentException("A Pokemon must have at least one defined type");
+        }
+
+        // --- Regola 2: Se type1 è UNDEFINED ma type2 no, scambiali ---
+        if (this.type1.getName() == PokemonTypeName.UNDEFINED &&
+                this.type2.getName() != PokemonTypeName.UNDEFINED) {
+            PokemonType temp = this.type1;
+            this.type1 = this.type2;
+            this.type2 = temp;
+        }
+
+        // --- Statistiche ---
         this.hp = hp;
         this.attack = attack;
         this.defense = defense;
         this.specialAttack = specialAttack;
         this.specialDefense = specialDefense;
         this.speed = speed;
+
+        // --- Calcolo automatico del totale ---
+        this.total = hp + attack + defense + specialAttack + specialDefense + speed;
+
         this.rarity = rarity;
 
-        resistances = new HashSet<>();
-        weaknesses = new HashSet<>();
+        // --- Calcolo resistenze e debolezze ---
+        this.resistances = new HashSet<>();
+        this.weaknesses = new HashSet<>();
         calculateResistances();
         calculateWeaknesses();
     }
 
-    public PokemonGA(int number, String name, PokemonType type1, PokemonType type2, int hp, int attack, int defense, int specialAttack, int specialDefense, int speed, PokemonRarity rarity) {
-        this(number, name, type1, type2, (hp + attack + defense + specialAttack + specialDefense + speed), hp, attack, defense, specialAttack, specialDefense, speed, rarity);
-    }
-
     //Calcola automaticamente tutte le resistenze in base ai due Type del pokemon
-    private void calculateResistances(){
+    private void calculateResistances() {
         Set<PokemonTypeName> allTypes = EnumSet.allOf(PokemonTypeName.class);
         allTypes.remove(PokemonTypeName.UNDEFINED);
-        Map<PokemonTypeName, Double> defProperties1 = type1.getDefensiveProperties();
-        boolean monotype = type2.getName() == PokemonTypeName.UNDEFINED;
 
-        if(monotype){
-            for(PokemonTypeName x : allTypes){
-                Double mul1 = defProperties1.get(x);
-                if(mul1.equals(PokemonTypeMultiplier.IMMUNE_TO) || mul1.equals(PokemonTypeMultiplier.RESISTS)){
-                    resistances.add(x);
-                }
-            }
-        }
-        else{
-            Map<PokemonTypeName, Double> defProperties2 = type2.getDefensiveProperties();
+        Map<PokemonTypeName, Double> def1 = type1.getDefensiveProperties();
+        Map<PokemonTypeName, Double> def2 = type2.getDefensiveProperties();
 
-            for(PokemonTypeName x : allTypes){
-                Double mul1 = defProperties1.get(x);
-                Double mul2 = defProperties2.get(x);
+        boolean monotype = (type2.getName() == PokemonTypeName.UNDEFINED);
 
-                if(mul1.equals(PokemonTypeMultiplier.IMMUNE_TO) || mul2.equals(PokemonTypeMultiplier.IMMUNE_TO)){
-                    resistances.add(x);
-                }
-                else if(mul1.equals(PokemonTypeMultiplier.NORMAL_EFFECTIVENESS) && mul2.equals(PokemonTypeMultiplier.RESISTS)){
-                    resistances.add(x);
-                }
-                else if(mul1.equals(PokemonTypeMultiplier.RESISTS)){
-                    if(mul2.equals(PokemonTypeMultiplier.RESISTS) || mul2.equals(PokemonTypeMultiplier.NORMAL_EFFECTIVENESS)){
-                        resistances.add(x);
-                    }
-                }
+        for (PokemonTypeName attackType : allTypes) {
+            double multiplier1 = def1.getOrDefault(attackType, PokemonTypeMultiplier.NORMAL_EFFECTIVENESS);
+            double multiplier2 = monotype
+                    ? 1.0
+                    : def2.getOrDefault(attackType, PokemonTypeMultiplier.NORMAL_EFFECTIVENESS);
+
+            double finalMultiplier = multiplier1 * multiplier2;
+
+            if (finalMultiplier < PokemonTypeMultiplier.NORMAL_EFFECTIVENESS) {
+                resistances.add(attackType);
             }
         }
     }
 
-    //Calcola automaticamente tutte le debolezze in base ai due type del pokemon
-    private void calculateWeaknesses(){
+    private void calculateWeaknesses() {
         Set<PokemonTypeName> allTypes = EnumSet.allOf(PokemonTypeName.class);
         allTypes.remove(PokemonTypeName.UNDEFINED);
-        Map<PokemonTypeName, Double> defProperties1 = type1.getDefensiveProperties();
-        boolean monotype = type2.getName() == PokemonTypeName.UNDEFINED;
 
-        if(monotype){
-            for(PokemonTypeName x : allTypes){
-                Double mul1 = defProperties1.get(x);
-                if(mul1.equals(PokemonTypeMultiplier.WEAK_TO)){
-                    weaknesses.add(x);
-                }
-            }
-        }
-        else{
-            Map<PokemonTypeName, Double> defProperties2 = type2.getDefensiveProperties();
+        Map<PokemonTypeName, Double> def1 = type1.getDefensiveProperties();
+        Map<PokemonTypeName, Double> def2 = type2.getDefensiveProperties();
 
-            for(PokemonTypeName x : allTypes){
-                Double mul1 = defProperties1.get(x);
-                Double mul2 = defProperties2.get(x);
+        boolean monotype = (type2.getName() == PokemonTypeName.UNDEFINED);
 
-                if(mul1.equals(PokemonTypeMultiplier.WEAK_TO)){
-                    if(mul2.equals(PokemonTypeMultiplier.WEAK_TO) || mul2.equals(PokemonTypeMultiplier.NORMAL_EFFECTIVENESS)){
-                        weaknesses.add(x);
-                    }
-                }
-                else if(mul1.equals(PokemonTypeMultiplier.NORMAL_EFFECTIVENESS) && mul2.equals(PokemonTypeMultiplier.WEAK_TO)){
-                    weaknesses.add(x);
-                }
+        for (PokemonTypeName attackType : allTypes) {
+            double m1 = def1.getOrDefault(attackType, PokemonTypeMultiplier.NORMAL_EFFECTIVENESS);
+            double m2 = monotype
+                    ? 1.0
+                    : def2.getOrDefault(attackType, PokemonTypeMultiplier.NORMAL_EFFECTIVENESS);
+
+            double finalMultiplier = m1 * m2;
+
+            // Qualsiasi moltiplicatore > 1.0 è una debolezza (es. 2x, 4x)
+            if (finalMultiplier > PokemonTypeMultiplier.NORMAL_EFFECTIVENESS) {
+                weaknesses.add(attackType);
             }
         }
     }
