@@ -20,8 +20,7 @@ public class FixedSizePopulation<T extends Individual> extends Population<T> {
         if (0 < maxSize && maxSize <= size()) {
             return false;
         }
-        super.add(individual);
-        return true;
+        return super.add(individual);
     }
 
 }

@@ -1,4 +1,4 @@
-package util;
+package com.pokedexsocial.backend.util;
 
 import com.pokedexsocial.backend.util.SortWhitelist;
 import org.junit.jupiter.api.Test;

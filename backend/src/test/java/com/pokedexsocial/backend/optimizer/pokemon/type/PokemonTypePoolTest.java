@@ -1,4 +1,4 @@
-package optimizer.pokemon.type;
+package com.pokedexsocial.backend.optimizer.pokemon.type;
 
 import com.pokedexsocial.backend.model.Type;
 import com.pokedexsocial.backend.model.TypeEffectiveness;

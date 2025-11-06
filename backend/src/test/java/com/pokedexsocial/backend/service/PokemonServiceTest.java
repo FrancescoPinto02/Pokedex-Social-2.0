@@ -1,4 +1,4 @@
-package service;
+package com.pokedexsocial.backend.service;
 
 import com.pokedexsocial.backend.dto.PokemonDto;
 import com.pokedexsocial.backend.dto.PokemonFiltersDto;

@@ -152,6 +152,9 @@
                         <param>com.pokedexsocial.backend.util.*</param>
                         <param>com.pokedexsocial.backend.optimizer.pokemon.*</param>
                         <param>com.pokedexsocial.backend.optimizer.ga.fitness.*</param>
+                        <param>com.pokedexsocial.backend.optimizer.ga.population.*</param>
+                        <param>com.pokedexsocial.backend.optimizer.ga.initializer.*</param>
+                        <param>com.pokedexsocial.backend.optimizer.ga.operators.crossover.*</param>
                     </targetClasses>
 
                     <mutators>

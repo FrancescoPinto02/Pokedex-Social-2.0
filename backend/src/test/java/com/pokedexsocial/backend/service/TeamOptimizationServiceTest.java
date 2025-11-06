@@ -1,4 +1,4 @@
-package service;
+package com.pokedexsocial.backend.service;
 import com.pokedexsocial.backend.dto.OptimizationResultDTO;
 import com.pokedexsocial.backend.optimizer.ga.individuals.PokemonTeamGA;
 import com.pokedexsocial.backend.optimizer.ga.metaheuristics.PokemonGeneticAlgorithm;

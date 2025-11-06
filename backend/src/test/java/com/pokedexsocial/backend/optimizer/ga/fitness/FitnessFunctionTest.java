@@ -1,4 +1,4 @@
-package optimizer.ga.fitness;
+package com.pokedexsocial.backend.optimizer.ga.fitness;
 
 import com.pokedexsocial.backend.optimizer.ga.fitness.FitnessFunction;
 import com.pokedexsocial.backend.optimizer.ga.individuals.Individual;

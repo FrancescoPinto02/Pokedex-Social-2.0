@@ -3,7 +3,6 @@ package com.pokedexsocial.backend.optimizer.ga.operators.crossover;
 import com.pokedexsocial.backend.optimizer.ga.individuals.Individual;
 import com.pokedexsocial.backend.optimizer.ga.operators.GeneticOperator;
 import com.pokedexsocial.backend.optimizer.ga.population.Population;
-import com.pokedexsocial.backend.optimizer.ga.utils.GAUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

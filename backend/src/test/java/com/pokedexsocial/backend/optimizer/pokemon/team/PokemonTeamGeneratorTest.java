@@ -1,4 +1,4 @@
-package optimizer.pokemon.team;
+package com.pokedexsocial.backend.optimizer.pokemon.team;
 
 import com.pokedexsocial.backend.optimizer.ga.individuals.PokemonTeamGA;
 import com.pokedexsocial.backend.optimizer.pokemon.core.PokemonGA;

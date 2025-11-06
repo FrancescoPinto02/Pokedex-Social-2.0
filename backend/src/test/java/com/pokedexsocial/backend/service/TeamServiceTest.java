@@ -1,4 +1,4 @@
-package service;
+package com.pokedexsocial.backend.service;
 
 import com.pokedexsocial.backend.dto.CreateTeamRequest;
 import com.pokedexsocial.backend.exception.InvalidTeamOperationException;

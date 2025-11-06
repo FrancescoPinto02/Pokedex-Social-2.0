@@ -1,4 +1,4 @@
-package optimizer.pokemon.core;
+package com.pokedexsocial.backend.optimizer.pokemon.core;
 
 import com.pokedexsocial.backend.optimizer.pokemon.core.PokemonRarity;
 import com.pokedexsocial.backend.optimizer.pokemon.type.PokemonType;

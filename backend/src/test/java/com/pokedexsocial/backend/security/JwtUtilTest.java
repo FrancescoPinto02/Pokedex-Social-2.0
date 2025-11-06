@@ -1,4 +1,4 @@
-package security;
+package com.pokedexsocial.backend.security;
 
 import com.pokedexsocial.backend.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
