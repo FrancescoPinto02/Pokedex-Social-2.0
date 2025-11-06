@@ -94,7 +94,7 @@ class CrossoverOperatorTest {
     }
 
     @Test
-        // Tests that two individuals produce exactly one pairing
+    // Tests that two individuals produce exactly one pairing (A-B or B-A)
     void makeRandomPairings_ShouldReturnOnePair_WhenTwoIndividuals() {
         // Arrange
         Population<TestIndividual> pop = new FixedSizePopulation<>(1L, 2);
@@ -107,10 +107,26 @@ class CrossoverOperatorTest {
         List<CrossoverOperator<TestIndividual>.Pairing> pairings = crossover.testMakeRandomPairings(pop);
 
         // Assert
-        assertEquals(1, pairings.size());
+        assertEquals(1, pairings.size(), "Population of two individuals should produce exactly one pairing");
+
         CrossoverOperator<TestIndividual>.Pairing p = pairings.get(0);
-        assertSame(ind1, p.firstParent);
-        assertSame(ind2, p.secondParent);
+
+        // --- Conditional assertion logic ---
+        // If first parent is ind1, then second must be ind2
+        // If first parent is ind2, then second must be ind1
+        // Otherwise, fail explicitly (should never happen)
+        if (p.firstParent == ind1) {
+            assertSame(ind2, p.secondParent, "If first parent is A, second must be B");
+        } else if (p.firstParent == ind2) {
+            assertSame(ind1, p.secondParent, "If first parent is B, second must be A");
+        } else {
+            fail("Unexpected parent in pairing: must be either A or B");
+        }
+
+        // --- Additional safety checks ---
+        assertNotNull(p.firstParent, "First parent should not be null");
+        assertNotNull(p.secondParent, "Second parent should not be null");
+        assertNotSame(p.firstParent, p.secondParent, "Parents should be distinct individuals");
     }
 
     @Test
