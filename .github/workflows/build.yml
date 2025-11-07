@@ -50,7 +50,7 @@ jobs:
         if: success() || failure()
         with:
           name: Maven Test Results
-          path: target/surefire-reports/*.xml
+          path: backend/target/surefire-reports/*.xml
           reporter: java-junit
           fail-on-error: false
 
@@ -82,15 +82,18 @@ jobs:
         if: github.ref == 'refs/heads/main' && always()
         run: |
           mkdir -p github-pages/Jacoco
-          if [ -d "target/site/jacoco" ]; then
-            cp -r target/site/jacoco/* github-pages/Jacoco/ || echo "No JaCoCo reports found"
+          if [ -d "backend/target/site/jacoco" ]; then
+            cp -r backend/target/site/jacoco/* github-pages/Jacoco/ || echo "No JaCoCo reports found"
+          else
+            echo "No JaCoCo directory found"
           fi
+          ls -R github-pages  # Debug: mostra cosa viene copiato
 
-      - name: Deploy reports to GitHub Pages
+      - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && always()
         with:
-          path: ./github-pages
+          path: github-pages
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
