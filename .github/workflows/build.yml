@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  pages: write
+  id-token: write
+
 jobs:
   backend:
     name: Build & Test Backend
@@ -27,8 +34,7 @@ jobs:
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.m2/repository
+          path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
@@ -36,20 +42,61 @@ jobs:
       - name: Build and test
         run: mvn clean verify -B
 
-      - name: Upload backend artifact (JAR)
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-jar
-          path: backend/target/*.jar
+      - name: Generate JaCoCo report
+        run: mvn jacoco:report
 
-      - name: Upload JaCoCo report to Codecov
+      - name: Generate test analytics (JUnit)
+        uses: dorny/test-reporter@v2
+        if: success() || failure()
+        with:
+          name: Maven Test Results
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload JaCoCo coverage to Codecov
         uses: codecov/codecov-action@v4
+        if: success() || failure()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: backend/target/site/jacoco/jacoco.xml
           flags: backend
-          name: codecov-umbrella-backend
+          name: backend-coverage
           fail_ci_if_error: false
+
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: backend/target/surefire-reports/TEST-*.xml
+
+      - name: Upload backend artifact (JAR)
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
+
+      - name: Prepare reports for GitHub Pages
+        if: github.ref == 'refs/heads/main' && always()
+        run: |
+          mkdir -p github-pages/Jacoco
+          if [ -d "target/site/jacoco" ]; then
+            cp -r target/site/jacoco/* github-pages/Jacoco/ || echo "No JaCoCo reports found"
+          fi
+
+      - name: Deploy reports to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && always()
+        with:
+          path: ./github-pages
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        if: github.ref == 'refs/heads/main' && always()
+        id: deployment
+
 
   frontend:
     name: Build Frontend
