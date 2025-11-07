@@ -96,8 +96,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && always()
         with:
-          name: github-pages-${{ github.job }}-${{ github.run_number }}
-          path: github-pages
+          path: ./github-pages
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
