@@ -50,7 +50,7 @@ jobs:
         if: success() || failure()
         with:
           name: Maven Test Results
-          path: backend/target/surefire-reports/*.xml
+          path: '**/target/surefire-reports/*.xml'
           reporter: java-junit
           fail-on-error: false
 
@@ -80,14 +80,20 @@ jobs:
 
       - name: Prepare reports for GitHub Pages
         if: github.ref == 'refs/heads/main' && always()
+        working-directory: backend
         run: |
-          mkdir -p github-pages/Jacoco
-          if [ -d "backend/target/site/jacoco" ]; then
-            cp -r backend/target/site/jacoco/* github-pages/Jacoco/ || echo "No JaCoCo reports found"
+          mkdir -p ../github-pages/Jacoco ../github-pages/PiTest
+          if [ -d "target/site/jacoco" ]; then
+            cp -r target/site/jacoco/* ../github-pages/Jacoco/ || echo "No JaCoCo reports found"
           else
-            echo "No JaCoCo directory found"
+            echo "⚠️ No JaCoCo directory found"
           fi
-          ls -R github-pages  # Debug: mostra cosa viene copiato
+          if [ -d "target/pit-reports" ]; then
+            cp -r target/pit-reports/* ../github-pages/PiTest/ || echo "No PiTest reports found"
+          else
+            echo "⚠️ No PiTest reports directory found"
+          fi
+          ls -R ../github-pages
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
