@@ -155,6 +155,8 @@
                         <param>com.pokedexsocial.backend.optimizer.ga.population.*</param>
                         <param>com.pokedexsocial.backend.optimizer.ga.initializer.*</param>
                         <param>com.pokedexsocial.backend.optimizer.ga.operators.crossover.*</param>
+                        <param>com.pokedexsocial.backend.optimizer.ga.operators.mutation.*</param>
+                        <param>com.pokedexsocial.backend.optimizer.ga.operators.selection.*</param>
                     </targetClasses>
 
                     <mutators>

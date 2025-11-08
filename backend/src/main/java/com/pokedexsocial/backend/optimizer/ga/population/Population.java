@@ -2,10 +2,10 @@ package com.pokedexsocial.backend.optimizer.ga.population;
 
 import com.pokedexsocial.backend.optimizer.ga.individuals.Individual;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 
-public abstract class Population<T extends Individual> extends HashSet<T> implements Comparable<Population<T>>{
+public abstract class Population<T extends Individual> extends LinkedHashSet<T> implements Comparable<Population<T>>{
 
     //@ spec_public
     private long id;
