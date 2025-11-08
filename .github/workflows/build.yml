@@ -69,7 +69,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: backend/target/surefire-reports/TEST-*.xml
+          files: '**/target/surefire-reports/*.xml'
 
       - name: Run PiTest mutation testing
         run: mvn org.pitest:pitest-maven:mutationCoverage
