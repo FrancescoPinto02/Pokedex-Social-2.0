@@ -95,7 +95,7 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
     @Override
     public Results<T> run() throws CloneNotSupportedException {
 
-        Random rand = new Random();
+        Random rand = newRandom();
         List<String> logEntries = new ArrayList<>();
         Stack<Population<T>> generations = new Stack<>();
 
@@ -155,6 +155,11 @@ public class SimpleGeneticAlgorithm<T extends Individual> extends GeneticAlgorit
         } while (iterations < maxIterations && !stopEarly);
 
         return new Results<>(this, generations, bestGeneration, logEntries);
+    }
+
+    // Allows deterministic testing without altering production behavior
+    protected Random newRandom() {
+        return new Random();
     }
 
     /*@ public normal_behavior
