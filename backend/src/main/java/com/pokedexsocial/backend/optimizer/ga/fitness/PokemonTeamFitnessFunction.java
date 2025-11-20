@@ -4,7 +4,6 @@ import com.pokedexsocial.backend.optimizer.ga.individuals.PokemonTeamGA;
 import com.pokedexsocial.backend.optimizer.pokemon.core.PokemonGA;
 import com.pokedexsocial.backend.optimizer.pokemon.core.PokemonRarity;
 import com.pokedexsocial.backend.optimizer.pokemon.type.PokemonTypeName;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -16,14 +15,11 @@ public class PokemonTeamFitnessFunction extends FitnessFunction<PokemonTeamGA> {
     private static final double MIN_FITNESS = 0.0;
     private static final double MAX_FITNESS = 100.0;
 
-    @Value("${pokemon.fitness.weights.low:0.5}")
-    private double LOW_WEIGHT;
+    private double LOW_WEIGHT = 0.5;
 
-    @Value("${pokemon.fitness.weights.normal:1.0}")
-    private double NORMAL_WEIGHT;
+    private double NORMAL_WEIGHT = 1.0;
 
-    @Value("${pokemon.fitness.weights.high:1.5}")
-    private double HIGH_WEIGHT;
+    private double HIGH_WEIGHT = 1.5;
 
     public PokemonTeamFitnessFunction() {
         super(true);
@@ -39,7 +35,7 @@ public class PokemonTeamFitnessFunction extends FitnessFunction<PokemonTeamGA> {
             double fitness = HIGH_WEIGHT * averageTeamStats(individual) + NORMAL_WEIGHT * typesDiversity(individual) + NORMAL_WEIGHT * teamResistances(individual)
                     + NORMAL_WEIGHT * legendaryCount(individual) + HIGH_WEIGHT * commonWeaknesses(individual);
 
-            //fitness = normalizeFitness(fitness, 0, (LOW_WEIGHT*MAX_FITNESS*0)+(NORMAL_WEIGHT*MAX_FITNESS*3)+(HIGH_WEIGHT*MAX_FITNESS*2), MIN_FITNESS, MAX_FITNESS);
+            fitness = normalizeFitness(fitness, 0, (LOW_WEIGHT*MAX_FITNESS*0)+(NORMAL_WEIGHT*MAX_FITNESS*3)+(HIGH_WEIGHT*MAX_FITNESS*2), MIN_FITNESS, MAX_FITNESS);
             individual.setFitness(fitness);
         }
     }
