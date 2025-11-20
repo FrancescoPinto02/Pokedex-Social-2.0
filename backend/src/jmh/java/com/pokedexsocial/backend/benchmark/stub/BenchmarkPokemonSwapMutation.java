@@ -1,4 +1,4 @@
-package com.pokedexsocial.backend.benchmark;
+package com.pokedexsocial.backend.benchmark.stub;
 
 import com.pokedexsocial.backend.optimizer.ga.individuals.PokemonTeamGA;
 import com.pokedexsocial.backend.optimizer.ga.operators.mutation.MutationOperator;

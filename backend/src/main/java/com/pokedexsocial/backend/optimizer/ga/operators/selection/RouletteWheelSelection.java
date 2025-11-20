@@ -9,54 +9,81 @@ import java.util.List;
 import java.util.Random;
 
 @Component("RouletteWheel")
-public class RouletteWheelSelection <T extends Individual> extends SelectionOperator<T>{
+public class RouletteWheelSelection<T extends Individual> extends SelectionOperator<T> {
 
-    class WheelElement {
-        protected final T individual;
-        protected final double startPosition;
-        protected final double size;
+    private static class WheelElement<T extends Individual> {
+        final T individual;
+        final double endPosition;
 
-        protected WheelElement(T individual, double startPosition, double size) {
+        WheelElement(T individual, double endPosition) {
             this.individual = individual;
-            this.startPosition = startPosition;
-            this.size = size;
+            this.endPosition = endPosition;
         }
     }
 
     @Override
     public Population<T> apply(Population<T> population, Random rand) throws CloneNotSupportedException {
-        double totalFitness = population.stream()
-                .mapToDouble(i -> i.getFitness())
+
+        int N = population.size();
+        List<T> individuals = new ArrayList<>(population);
+
+        // Calcolo fitness totale
+        double totalFitness = individuals.stream()
+                .mapToDouble(Individual::getFitness)
                 .sum();
-        // This should happen for empty populations only
-        if (totalFitness == 0.0) {
-            return population;
+
+        // Caso fitness nulla → selezione casuale
+        if (totalFitness <= 0) {
+            Population<T> randomPop = population.clone();
+            randomPop.clear();
+            for (int i = 0; i < N; i++) {
+                T chosen = individuals.get(rand.nextInt(N));
+                randomPop.add((T) chosen.clone());
+            }
+            return randomPop;
         }
 
-        // Wheel creation
-        List<WheelElement> rouletteWheel = new ArrayList<>();
-        double currentPosition = 0.0;
-        for (T individual : population) {
-            double relativeFitness = individual.getFitness() / totalFitness;
-            WheelElement wheelElement = new WheelElement(individual, currentPosition, relativeFitness);
-            rouletteWheel.add(wheelElement);
-            currentPosition += relativeFitness;
+        // =========================================
+        // Costruzione ruota cumulativa (0 → 1)
+        // =========================================
+        List<WheelElement<T>> wheel = new ArrayList<>(N);
+        double cumulative = 0;
+
+        for (T ind : individuals) {
+            cumulative += ind.getFitness() / totalFitness;
+            wheel.add(new WheelElement<>(ind, cumulative));
         }
 
-        // Spinning time!
+        // =========================================
+        // Costruzione nuova popolazione tramite binary search
+        // =========================================
         Population<T> newPopulation = population.clone();
         newPopulation.setId(population.getId() + 1);
         newPopulation.clear();
-        for (int i = 0; i < rouletteWheel.size(); i++) {
-            double pointer = rand.nextDouble();
-            for (WheelElement element : rouletteWheel) {
-                if (element.startPosition <= pointer && pointer < element.startPosition + element.size) {
-                    T winner = element.individual;
-                    newPopulation.add((T) winner.clone());
-                    break;
-                }
+
+        for (int i = 0; i < N; i++) {
+            double r = rand.nextDouble();
+            int index = binarySearchWheel(wheel, r);
+            newPopulation.add((T) wheel.get(index).individual.clone());
+        }
+
+        return newPopulation;
+    }
+
+    // Ricerca binaria sulla ruota
+    private int binarySearchWheel(List<WheelElement<T>> wheel, double value) {
+        int low = 0;
+        int high = wheel.size() - 1;
+
+        while (low < high) {
+            int mid = (low + high) / 2;
+            if (wheel.get(mid).endPosition >= value) {
+                high = mid;
+            } else {
+                low = mid + 1;
             }
         }
-        return newPopulation;
+
+        return low;
     }
 }
