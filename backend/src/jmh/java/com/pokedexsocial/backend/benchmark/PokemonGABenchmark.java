@@ -36,15 +36,29 @@ public class PokemonGABenchmark {
     private SimpleGeneticAlgorithm<PokemonTeamGA> ga;
     private PokedexJsonLoader loader;
 
+    // Accumulatori
+    private double fitnessSum;
+    private long timeSum;
+    private int generationsSum;
+    private int count;
+
+    // Variabile temporanea per raccogliere i risultati della singola invocazione
+    private Results<PokemonTeamGA> lastResult;
+    private long lastTime;
+
     @Setup(Level.Trial)
-    public void loadData() {
+    public void setupTrial() {
         loader = new PokedexJsonLoader();
+
+        fitnessSum = 0;
+        timeSum = 0;
+        generationsSum = 0;
+        count = 0;
     }
 
     @Setup(Level.Invocation)
     public void setupGA() {
-
-        Initializer<PokemonTeamGA> initializer = new BenchmarkInitializer(loader, 200);
+        Initializer<PokemonTeamGA> initializer = new BenchmarkInitializer(loader, 100);
         FitnessFunction<PokemonTeamGA> fitness = new PokemonTeamFitnessFunction();
 
         SelectionOperator<PokemonTeamGA> selection =
@@ -78,42 +92,31 @@ public class PokemonGABenchmark {
 
     @Benchmark
     public Results<PokemonTeamGA> runGA() throws Exception {
-
         long start = System.currentTimeMillis();
-        Results<PokemonTeamGA> results = ga.run();
-        long end = System.currentTimeMillis();
+        lastResult = ga.run();
+        lastTime = System.currentTimeMillis() - start;
+        return lastResult;
+    }
 
-        // Estrai informazioni utili
-        double bestFitness = results.getBestIndividual().getFitness();
-        int generations = results.getGenerations().size();
-        long time = end - start;
+    @TearDown(Level.Invocation)
+    public void collectStats() {
+        double bf = lastResult.getBestIndividual().getFitness();
+        int gens = lastResult.getGenerations().size();
 
-        // Registra il risultato
-        ResultsCollector.record(
-                new ResultsCollector.Entry(
-                        selectionType,
-                        crossoverType,
-                        bestFitness,
-                        generations,
-                        time
-                )
-        );
-
-        return results;
+        fitnessSum += bf;
+        generationsSum += gens;
+        timeSum += lastTime;
+        count++;
     }
 
     @TearDown(Level.Trial)
-    public void exportResults() {
-        System.out.println("=== RISULTATI RACCOLTI PER IL TRIAL ===");
-
-        for (ResultsCollector.Entry e : ResultsCollector.getAll()) {
-            System.out.printf(
-                    "sel=%s, cross=%s, best=%.3f, gen=%d, time=%d ms%n",
-                    e.selectionType, e.crossoverType,
-                    e.bestFitness, e.generations, e.timeMillis
-            );
-        }
-
-        System.out.println("========================================");
+    public void printAverages() {
+        System.out.println("\n=== MEDIE PER CONFIGURAZIONE ===");
+        System.out.printf("Selection: %s | Crossover: %s%n", selectionType, crossoverType);
+        System.out.printf("Media Fitness: %.3f%n", fitnessSum / count);
+        System.out.printf("Media Iterazioni: %.2f%n", (double) generationsSum / count);
+        System.out.printf("Media Tempo interno GA: %.2f ms%n", (double) timeSum / count);
+        System.out.println("(JMH fornirà il tempo medio effettivo del metodo @Benchmark)");
+        System.out.println("================================\n");
     }
 }

@@ -35,7 +35,7 @@ public class PokemonTeamFitnessFunction extends FitnessFunction<PokemonTeamGA> {
             double fitness = HIGH_WEIGHT * averageTeamStats(individual) + NORMAL_WEIGHT * typesDiversity(individual) + NORMAL_WEIGHT * teamResistances(individual)
                     + NORMAL_WEIGHT * legendaryCount(individual) + HIGH_WEIGHT * commonWeaknesses(individual);
 
-            fitness = normalizeFitness(fitness, 0, (LOW_WEIGHT*MAX_FITNESS*0)+(NORMAL_WEIGHT*MAX_FITNESS*3)+(HIGH_WEIGHT*MAX_FITNESS*2), MIN_FITNESS, MAX_FITNESS);
+            //fitness = normalizeFitness(fitness, 0, (LOW_WEIGHT*MAX_FITNESS*0)+(NORMAL_WEIGHT*MAX_FITNESS*3)+(HIGH_WEIGHT*MAX_FITNESS*2), MIN_FITNESS, MAX_FITNESS);
             individual.setFitness(fitness);
         }
     }
