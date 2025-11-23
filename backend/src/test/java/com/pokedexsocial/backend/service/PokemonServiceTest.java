@@ -205,6 +205,7 @@ class PokemonServiceTest {
         assertThat(dto.getWeaknesses()).containsEntry("Fire", 2.0).containsEntry("Ground", 2.0);
         assertThat(dto.getResistances()).containsEntry("Electric", 0.5);
         assertThat(dto.getNeutral()).containsEntry("Normal", 1.0);
+        assertThat(dto.getWeaknesses()).doesNotContainKey("Normal");
 
         // Interactions
         verify(pokemonRepository).findById(1);
@@ -280,6 +281,7 @@ class PokemonServiceTest {
         // Classifications
         assertThat(dto.getResistances()).containsEntry("Water", 0.5);
         assertThat(dto.getNeutral()).containsEntry("Rock", 1.0);
+        assertThat(dto.getResistances()).doesNotContainKey("Rock");
         assertThat(dto.getWeaknesses()).doesNotContainKey("Poison");
         assertThat(dto.getResistances()).doesNotContainKey("Poison"); // not included due to > 0.0 && < 1.0
         assertThat(dto.getNeutral()).doesNotContainKey("Poison");

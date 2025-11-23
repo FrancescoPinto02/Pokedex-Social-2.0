@@ -47,10 +47,10 @@ public class User {
     private LocalDate birthDate;
 
     @Column(nullable = false, length = 20)
-    private String role = "USER";
+    private String role;
 
     @Column(nullable = false)
-    private Long pokecoin = 0L;
+    private Long pokecoin;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

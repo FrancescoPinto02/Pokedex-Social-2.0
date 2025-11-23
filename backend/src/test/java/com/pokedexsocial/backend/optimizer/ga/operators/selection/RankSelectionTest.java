@@ -193,6 +193,51 @@ class RankSelectionTest {
         verify(random, times(population.size())).nextDouble();
     }
 
+    @Test
+    void apply_ShouldUseSortedOrderForRank_AssigningCorrectRankPositions() throws CloneNotSupportedException {
+        // ----- Arrange -----
+        TestPopulation population = new TestPopulation(99L);
+
+        // Inserimento volontariamente NON ordinato
+        TestIndividual indA = new TestIndividual(50.0); // should be rank 3 (best)
+        TestIndividual indB = new TestIndividual(10.0); // should be rank 1 (worst)
+        TestIndividual indC = new TestIndividual(30.0); // should be rank 2 (middle)
+
+        // order of insertion: A, B, C
+        population.add(indA);
+        population.add(indB);
+        population.add(indC);
+
+        // Dopo SORT (fitness ascending) → B (10), C (30), A (50)
+        //
+        // ranks = 1, 2, 3  → totalRankSum = 6
+        // intervals:
+        //   B: [0.0, 1/6)
+        //   C: [1/6, 3/6)
+        //   A: [3/6, 1.0)
+
+        // Pointer scelti apposta per selezionare ognuno in base al ranking SORTED
+        when(random.nextDouble()).thenReturn(
+                0.00,   // picks B
+                0.30,   // picks C
+                0.80    // picks A
+        );
+
+        // ----- Act -----
+        Population<TestIndividual> result = rankSelection.apply(population, random);
+
+        // ----- Assert -----
+        List<Double> fitness = new ArrayList<>();
+        for (TestIndividual t : result) fitness.add(t.getFitness());
+
+        assertEquals(List.of(10.0, 30.0, 50.0), fitness,
+                "Selection must follow SORTED rank order, not insertion order");
+
+        // Verifica che sort() è effettivamente necessario
+        // Senza sort → gli intervalli sarebbero costruiti su [A,B,C], non su [B,C,A]
+        // e i pointer sceglierebbero individui sbagliati.
+    }
+
     /**
      * Simple concrete Population implementation used only for testing.
      */

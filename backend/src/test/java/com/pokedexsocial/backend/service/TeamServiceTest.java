@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -162,29 +163,33 @@ class TeamServiceTest {
     // -------------------------------------------------------------------------------------
     @Test
     void createTeam_ShouldCreateTeamSuccessfully_WhenRequestValid() throws Exception {
-        // given
         when(userRepository.findById(authUser.id())).thenReturn(Optional.of(dbUser));
         when(pokemonRepository.findById(1)).thenReturn(Optional.of(bulbasaur));
 
-        // Stub salvataggio
-        when(teamRepository.save(any(Team.class))).thenAnswer(invocation -> {
-            Team t = invocation.getArgument(0);
+        when(teamRepository.save(any(Team.class))).thenAnswer(inv -> {
+            Team t = inv.getArgument(0);
             t.setId(99);
+            t.setCreatedAt(java.time.Instant.now());
+            t.setUpdatedAt(java.time.Instant.now());
             return t;
         });
 
-        // when
         TeamDto result = teamService.createTeam(request);
 
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(99);
-        assertThat(result.getName()).isEqualTo("Kanto Starters");
-        assertThat(result.getVisibility()).isEqualTo("PUBLIC");
-        assertThat(result.getMembers()).hasSize(1);
+        // ---- verifiche DTO per uccidere mutanti 297,299,300 ----
+        assertThat(result.getDescription()).isEqualTo("My starter squad");
+        assertThat(result.getCreatedAt()).isNotNull();
+        assertThat(result.getUpdatedAt()).isNotNull();
+
+        // ---- verifica sul Team salvato (uccide mutanti 82) ----
+        ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+        verify(teamRepository).save(captor.capture());
+        Team saved = captor.getValue();
+
+        assertThat(saved.getDescription()).isEqualTo("My starter squad");
+        assertThat(saved.getName()).isEqualTo("Kanto Starters");
 
         verify(teamRepository).save(any(Team.class));
-        verify(pokemonRepository).findById(1);
     }
 
     /**
@@ -303,6 +308,9 @@ class TeamServiceTest {
         publicTeam.setVisibility("PUBLIC");
         publicTeam.setUser(dbUser);
         publicTeam.getPokemons().add(new TeamPokemon(publicTeam, bulbasaur, 1));
+        publicTeam.setDescription("Public description");
+        publicTeam.setCreatedAt(java.time.Instant.now());
+        publicTeam.setUpdatedAt(java.time.Instant.now());
 
         when(teamRepository.findById(10)).thenReturn(Optional.of(publicTeam));
 
@@ -313,6 +321,9 @@ class TeamServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(10);
         assertThat(result.getVisibility()).isEqualTo("PUBLIC");
+        assertThat(result.getDescription()).isEqualTo("Public description");
+        assertThat(result.getCreatedAt()).isNotNull();
+        assertThat(result.getUpdatedAt()).isNotNull();
     }
 
     /**
@@ -810,6 +821,7 @@ class TeamServiceTest {
 
         request.setMembers(List.of(m1, m2));
         request.setVisibility("PUBLIC");
+        request.setDescription("Updated team");
 
         // mock repositories
         when(teamRepository.findById(1)).thenReturn(Optional.of(team));
@@ -821,6 +833,7 @@ class TeamServiceTest {
         Pokemon newPoke2 = new Pokemon();
         newPoke2.setId(2);
         newPoke2.setSpecies("Ivysaur");
+
 
         when(pokemonRepository.findById(1)).thenReturn(Optional.of(newPoke1));
         when(pokemonRepository.findById(2)).thenReturn(Optional.of(newPoke2));
@@ -835,7 +848,11 @@ class TeamServiceTest {
         assertThat(result.getMembers()).hasSize(2);
         assertThat(result.getMembers().get(0).getPokemon().species()).isIn("Bulbasaur", "Ivysaur");
 
-        verify(teamRepository).save(any(Team.class));
+        ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+        verify(teamRepository).save(captor.capture());
+        Team saved = captor.getValue();
+
+        assertThat(saved.getDescription()).isEqualTo("Updated team");
     }
 
     // -------------------------------------------------------------------------------------

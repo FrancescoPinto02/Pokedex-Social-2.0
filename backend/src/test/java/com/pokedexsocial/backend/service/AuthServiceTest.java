@@ -13,6 +13,7 @@ import com.pokedexsocial.backend.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -106,22 +107,40 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("ash@pokedex.com")).thenReturn(false);
         when(userRepository.existsByUsername("ashKetchum")).thenReturn(false);
         when(passwordEncoder.encode("pikachu123")).thenReturn("encodedPassword");
+        when(jwtUtil.generateToken(42, "ashKetchum", "USER")).thenReturn("jwtToken");
+
+        // Mock salvataggio: assegna ID e ritorna l’utente salvato
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User saved = invocation.getArgument(0);
             saved.setId(42);
             return saved;
         });
-        when(jwtUtil.generateToken(42, "ashKetchum", "USER")).thenReturn("jwtToken");
 
         AuthResponse response = authService.register(registrationRequest);
 
+        // --- ASSERT SULLE RISPOSTE ---
         assertThat(response).isNotNull();
         assertThat(response.getToken()).isEqualTo("jwtToken");
         assertThat(response.getUserId()).isEqualTo(42);
         assertThat(response.getUsername()).isEqualTo("ashKetchum");
 
+        // --- CATTURIAMO L’UTENTE SALVATO ---
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User savedUser = captor.getValue();
+
+        // --- ASSERT SU TUTTI I CAMPI (uccide mutanti 65–72) ---
+        assertThat(savedUser.getEmail()).isEqualTo("ash@pokedex.com");
+        assertThat(savedUser.getUsername()).isEqualTo("ashKetchum");
+        assertThat(savedUser.getPassword()).isEqualTo("encodedPassword");
+        assertThat(savedUser.getFirstName()).isEqualTo("Ash");
+        assertThat(savedUser.getLastName()).isEqualTo("Ketchum");
+        assertThat(savedUser.getBirthDate()).isEqualTo(LocalDate.of(2000, 1, 1));
+        assertThat(savedUser.getPokecoin()).isEqualTo(0L);
+        assertThat(savedUser.getRole()).isEqualTo("USER");
+
+        // Verifiche normali
         verify(passwordEncoder).encode("pikachu123");
-        verify(userRepository).save(any(User.class));
         verify(jwtUtil).generateToken(42, "ashKetchum", "USER");
     }
     // #################################################################################################################

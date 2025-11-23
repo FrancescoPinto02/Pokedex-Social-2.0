@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -179,6 +180,136 @@ class KTournamentSelectionTest {
 
         // Assert
         assertEquals("C", winner.toString(), "Pointer 0.8 should select individual C");
+    }
+
+    @Test
+    void getProportionalWinner_ShouldCoverBranch_WhenPointerIsNegative() throws Exception {
+        // Accesso al metodo privato
+        Method method = KTournamentSelection.class
+                .getDeclaredMethod("getProportionalWinner", List.class, Random.class);
+        method.setAccessible(true);
+
+        KTournamentSelection<TestIndividual> localSelection = new KTournamentSelection<>();
+
+        // Torneo con fitness positive (totalFitness > 0)
+        List<TestIndividual> tournament = new ArrayList<>();
+        tournament.add(new TestIndividual("A", 1.0));
+        tournament.add(new TestIndividual("B", 1.0));
+        tournament.add(new TestIndividual("C", 1.0));
+        tournament.add(new TestIndividual("D", 1.0));
+        tournament.add(new TestIndividual("E", 1.0));
+
+        // Forziamo un pointer FUORI dal range "normale" di nextDouble()
+        when(mockedRandom.nextDouble()).thenReturn(-0.1);
+
+        // Act
+        TestIndividual winner = (TestIndividual) method.invoke(localSelection, tournament, mockedRandom);
+
+        // Assert: nessun intervallo viene matchato, si usa il fallback
+        assertEquals("E", winner.toString(), "Con pointer negativo dovrebbe scattare il fallback sull'ultimo individuo");
+    }
+
+    @Test
+    void getProportionalWinner_ShouldSelectWhenPointerEqualsStartBoundary() throws Exception {
+        Method method = KTournamentSelection.class
+                .getDeclaredMethod("getProportionalWinner", List.class, Random.class);
+        method.setAccessible(true);
+
+        KTournamentSelection<TestIndividual> sel = new KTournamentSelection<>();
+
+        // uniform fitness: each slice = 0.2
+        List<TestIndividual> tournament = List.of(
+                new TestIndividual("A", 1),
+                new TestIndividual("B", 1),
+                new TestIndividual("C", 1),
+                new TestIndividual("D", 1),
+                new TestIndividual("E", 1)
+        );
+
+        // pointer EXACTLY on start position of C (index 2)
+        when(mockedRandom.nextDouble()).thenReturn(0.4);
+
+        TestIndividual winner = (TestIndividual) method.invoke(sel, tournament, mockedRandom);
+
+        assertEquals("C", winner.toString(),
+                "Pointer equal to boundary should select the correct slice");
+    }
+
+    @Test
+    void getProportionalWinner_ShouldNotSelectSliceWhenPointerEqualsEndBoundary() throws Exception {
+        Method method = KTournamentSelection.class
+                .getDeclaredMethod("getProportionalWinner", List.class, Random.class);
+        method.setAccessible(true);
+
+        KTournamentSelection<TestIndividual> sel = new KTournamentSelection<>();
+
+        List<TestIndividual> tournament = List.of(
+                new TestIndividual("A", 1),
+                new TestIndividual("B", 1),
+                new TestIndividual("C", 1),
+                new TestIndividual("D", 1),
+                new TestIndividual("E", 1)
+        );
+
+        // end of A = 0.2, should NOT pick A but B
+        when(mockedRandom.nextDouble()).thenReturn(0.2);
+
+        TestIndividual winner = (TestIndividual) method.invoke(sel, tournament, mockedRandom);
+
+        assertEquals("B", winner.toString(),
+                "Pointer exactly equal to end boundary must pick next slice");
+    }
+
+    @Test
+    void getProportionalWinner_ShouldUseFallback_WhenNoSliceMatchesWithinNormalRange() throws Exception {
+        Method method = KTournamentSelection.class
+                .getDeclaredMethod("getProportionalWinner", List.class, Random.class);
+        method.setAccessible(true);
+
+        KTournamentSelection<TestIndividual> sel = new KTournamentSelection<>();
+
+        // exactly 5 participants (required)
+        List<TestIndividual> tournament = List.of(
+                new TestIndividual("A", 4.0),  // [0.0, 0.4)
+                new TestIndividual("B", 4.0),  // [0.4, 0.8)
+                new TestIndividual("C", 1.0),  // [0.8, 0.9)
+                new TestIndividual("D", 0.1),  // [0.9, 0.91)
+                new TestIndividual("E", 0.9)   // [0.91, 1.0)
+        );
+
+        // pointer in final slice → must pick E
+        when(mockedRandom.nextDouble()).thenReturn(0.95);
+
+        TestIndividual winner = (TestIndividual) method.invoke(sel, tournament, mockedRandom);
+
+        assertEquals("E", winner.toString(),
+                "Pointer near the end should select last slice; prevents fallback mutant from surviving");
+    }
+
+    @Test
+    void getProportionalWinner_ShouldUseMaxFallback_WhenTotalFitnessIsZero() throws Exception {
+        Method method = KTournamentSelection.class
+                .getDeclaredMethod("getProportionalWinner", List.class, Random.class);
+        method.setAccessible(true);
+
+        KTournamentSelection<TestIndividual> sel = new KTournamentSelection<>();
+
+        // 5 individuals with fitness 0 BUT max is NOT the last one
+        List<TestIndividual> tournament = List.of(
+                new TestIndividual("Z", 0.0), // <-- this is max by compareTo
+                new TestIndividual("A", 0.0),
+                new TestIndividual("B", 0.0),
+                new TestIndividual("C", 0.0),
+                new TestIndividual("D", 0.0)
+        );
+
+        // pointer irrelevant
+        lenient().when(mockedRandom.nextDouble()).thenReturn(0.7);
+
+        TestIndividual winner = (TestIndividual) method.invoke(sel, tournament, mockedRandom);
+
+        assertEquals("Z", winner.toString(),
+                "With totalFitness=0 the fallback MUST use Collections.max(), not slicing fallback");
     }
 }
 

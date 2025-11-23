@@ -173,5 +173,29 @@ class PokemonSwapMutationTest {
         assertNotSame(parent.getCoding(), mutated.getCoding());
         verify(pokemonGenerator, times(1)).generatePokemon();
     }
+
+    @Test
+    void apply_ShouldMutateIndividual_WhenProbabilityExactlyEqual() throws Exception {
+        Population<PokemonTeamGA> population = new FixedSizePopulation<>(1L, 5);
+
+        PokemonGA g1 = newPokemon("G1");
+        PokemonGA g2 = newPokemon("G2");
+        PokemonTeamGA ind = new PokemonTeamGA(new PokemonGA[]{g1, g2});
+        population.add(ind);
+
+        PokemonGA generated = newPokemon("Generated");
+
+        // boundary case EXACT: rand.nextDouble() == mutationProbability
+        when(random.nextDouble()).thenReturn(0.3);
+        when(random.nextInt(2)).thenReturn(0);
+        when(pokemonGenerator.generatePokemon()).thenReturn(generated);
+
+        Population<PokemonTeamGA> result = mutationOperator.apply(population, random);
+        PokemonTeamGA mutated = result.iterator().next();
+
+        assertNotSame(ind, mutated, "Exact boundary should trigger mutation");
+        assertArrayEquals(new PokemonGA[]{generated, g2}, mutated.getCoding());
+        verify(pokemonGenerator, times(1)).generatePokemon();
+    }
 }
 

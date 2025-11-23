@@ -16,25 +16,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.Collection;
+import java.util.Random;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Professional unit tests for {@link SimpleGeneticAlgorithm}.
- *
- * These tests verify:
- * - Mutation probability behavior (triggered vs skipped)
- * - Iteration limits and improvement detection
- * - Correct interaction with GA operators
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SimpleGeneticAlgorithmTest {
 
-    /**
-     * Minimal Individual implementation for testing.
-     */
     static class TestIndividual extends Individual {
         private double fitness;
 
@@ -83,17 +75,14 @@ class SimpleGeneticAlgorithmTest {
         algorithm = new SimpleGeneticAlgorithm<>(
                 fitnessFunction, initializer, selectionOperator,
                 crossoverOperator, mutationOperator,
-                0.5,  // mutation probability
-                5,    // max iterations
-                3     // max iterations without improvement
+                0.5,
+                5,
+                3
         );
     }
 
-    /**
-     * Utility: creates a population with given fitness values.
-     */
     private Population<TestIndividual> makePopulation(Long id, double... fitnessValues) {
-        Population<TestIndividual> pop = new Population<>(id) {}; // anonymous subclass
+        Population<TestIndividual> pop = new Population<>(id) {};
         for (double f : fitnessValues) {
             pop.add(new TestIndividual(f));
         }
@@ -102,23 +91,24 @@ class SimpleGeneticAlgorithmTest {
     }
 
     @Test
-    void run_ShouldPerformMutation_WhenProbabilityTriggers() throws CloneNotSupportedException {
-        Population<TestIndividual> afterSelection = makePopulation(2L, 1.5, 2.5);
-        Population<TestIndividual> afterCrossover = makePopulation(3L, 2.0, 2.2);
-        Population<TestIndividual> afterMutation = makePopulation(4L, 3.0, 3.1);
+    void run_ShouldEvaluateInitialAndNewGenerations() throws CloneNotSupportedException {
+        algorithm.run();
+        verify(fitnessFunction, atLeast(2)).evaluate(any(Population.class));
+    }
 
-        when(selectionOperator.apply(any(), any())).thenReturn(afterSelection);
-        when(crossoverOperator.apply(any(), any())).thenReturn(afterCrossover);
-        when(mutationOperator.apply(any(), any())).thenReturn(afterMutation);
+    @Test
+    void run_ShouldPerformMutation_WhenProbabilityTriggers() throws CloneNotSupportedException {
+        Population<TestIndividual> sel = makePopulation(2L, 1.5, 2.5);
+        Population<TestIndividual> cross = makePopulation(3L, 2.0, 2.2);
+        Population<TestIndividual> mut = makePopulation(4L, 3.0, 3.1);
+
+        when(selectionOperator.apply(any(), any())).thenReturn(sel);
+        when(crossoverOperator.apply(any(), any())).thenReturn(cross);
+        when(mutationOperator.apply(any(), any())).thenReturn(mut);
 
         Results<TestIndividual> result = algorithm.run();
 
         assertThat(result).isNotNull();
-        assertThat(result.getBestGeneration()).isNotNull();
-        assertThat(result.getNumberOfIterations()).isGreaterThan(0);
-
-        verify(selectionOperator, atLeastOnce()).apply(any(), any());
-        verify(crossoverOperator, atLeastOnce()).apply(any(), any());
         verify(mutationOperator, atLeastOnce()).apply(any(), any());
     }
 
@@ -127,13 +117,13 @@ class SimpleGeneticAlgorithmTest {
         SimpleGeneticAlgorithm<TestIndividual> noMutationAlg = new SimpleGeneticAlgorithm<>(
                 fitnessFunction, initializer, selectionOperator,
                 crossoverOperator, mutationOperator,
-                0.0,  // mutation disabled
+                0.0,
                 5, 3
         );
 
         Results<TestIndividual> result = noMutationAlg.run();
 
-        assertThat(result.getBestGeneration()).isNotNull();
+        assertThat((Collection<? extends TestIndividual>) result.getBestGeneration()).isNotNull();
         verify(mutationOperator, never()).apply(any(), any());
     }
 
@@ -142,7 +132,7 @@ class SimpleGeneticAlgorithmTest {
         SimpleGeneticAlgorithm<TestIndividual> alg = new SimpleGeneticAlgorithm<>(
                 fitnessFunction, initializer, selectionOperator,
                 crossoverOperator, mutationOperator,
-                -0.5,  // 👈 negative value to hit left branch
+                -0.5,
                 5, 3
         );
         assertThat(alg.getMutationProbability()).isEqualTo(1.0);
@@ -150,30 +140,25 @@ class SimpleGeneticAlgorithmTest {
 
     @Test
     void run_ShouldReachMaxIterations_WhenAlwaysImproving() throws CloneNotSupportedException {
-        Population<TestIndividual> improvedPop = makePopulation(10L, 10.0, 11.0);
-        when(selectionOperator.apply(any(), any())).thenReturn(improvedPop);
-        when(crossoverOperator.apply(any(), any())).thenReturn(improvedPop);
-        when(mutationOperator.apply(any(), any())).thenReturn(improvedPop);
+        Population<TestIndividual> improved = makePopulation(10L, 10.0, 11.0);
+        when(selectionOperator.apply(any(), any())).thenReturn(improved);
+        when(crossoverOperator.apply(any(), any())).thenReturn(improved);
+        when(mutationOperator.apply(any(), any())).thenReturn(improved);
 
         Results<TestIndividual> result = algorithm.run();
 
         assertThat(result.getNumberOfIterations()).isEqualTo(5);
-        assertThat(result.getBestIndividual().getFitness()).isGreaterThan(0);
     }
 
     @Test
     void constructor_ShouldClampInvalidMutationProbability() {
-        // Mutation probability > 1 should be clamped to 1.0
         SimpleGeneticAlgorithm<TestIndividual> alg = new SimpleGeneticAlgorithm<>(
                 fitnessFunction, initializer, selectionOperator,
                 crossoverOperator, mutationOperator,
-                5.0,  // invalid value
+                5.0,
                 5, 3
         );
 
-        assertThat(alg.getMutationOperator()).isNotNull();
-        // Reflection used to verify internal field
-        // but if mutationProbability has a getter, use it directly
         assertThat(getPrivateField(alg, "mutationProbability")).isEqualTo(1.0);
     }
 
@@ -181,100 +166,343 @@ class SimpleGeneticAlgorithmTest {
     void run_ShouldHandleMinimizationMode() throws CloneNotSupportedException {
         when(fitnessFunction.isMaximum()).thenReturn(false);
 
-        Population<TestIndividual> worseGeneration = makePopulation(2L, 5.0, 4.0);
-        when(selectionOperator.apply(any(), any())).thenReturn(worseGeneration);
-        when(crossoverOperator.apply(any(), any())).thenReturn(worseGeneration);
-        when(mutationOperator.apply(any(), any())).thenReturn(worseGeneration);
+        Population<TestIndividual> worse = makePopulation(2L, 5.0, 4.0);
+        when(selectionOperator.apply(any(), any())).thenReturn(worse);
+        when(crossoverOperator.apply(any(), any())).thenReturn(worse);
+        when(mutationOperator.apply(any(), any())).thenReturn(worse);
 
         Results<TestIndividual> result = algorithm.run();
 
-        assertThat(result.getBestGeneration()).isNotNull();
+        assertThat((Collection<? extends TestIndividual>) result.getBestGeneration()).isNotNull();
         verify(fitnessFunction, atLeastOnce()).isMaximum();
     }
 
     @Test
-    void run_ShouldStopEarly_WhenNoImprovementsOccur() throws CloneNotSupportedException {
-        // Same fitness each generation => no improvement
+    void run_ShouldStopEarlyExactlyAfterConfiguredNoImprovementIterations() throws CloneNotSupportedException {
         Population<TestIndividual> stagnant = makePopulation(1L, 1.0, 1.0);
         when(selectionOperator.apply(any(), any())).thenReturn(stagnant);
         when(crossoverOperator.apply(any(), any())).thenReturn(stagnant);
         when(mutationOperator.apply(any(), any())).thenReturn(stagnant);
 
-        SimpleGeneticAlgorithm<TestIndividual> earlyStopAlg = new SimpleGeneticAlgorithm<>(
+        SimpleGeneticAlgorithm<TestIndividual> early = new SimpleGeneticAlgorithm<>(
                 fitnessFunction, initializer, selectionOperator,
                 crossoverOperator, mutationOperator,
-                0.5,  // valid mutation
-                50,   // many iterations possible
-                2     // but stop early after 2 non-improvements
+                0.5,
+                50,
+                2
         );
 
-        Results<TestIndividual> result = earlyStopAlg.run();
+        Results<TestIndividual> result = early.run();
 
-        // Should stop before max iterations
-        assertThat(result.getNumberOfIterations()).isLessThan(50);
-    }
-
-    @Test
-    void run_ShouldImprove_WhenFitnessIsMinimizationMode() throws CloneNotSupportedException {
-        // Simulate minimization instead of maximization
-        when(fitnessFunction.isMaximum()).thenReturn(false);
-
-        // Make compareTo < 0 so the condition (!isMaximum && compareTo < 0) becomes true
-        Population<TestIndividual> newGen = mock(Population.class);
-        Population<TestIndividual> bestGen = mock(Population.class);
-        when(newGen.compareTo(bestGen)).thenReturn(-1);
-
-        // Mock the GA flow
-        when(selectionOperator.apply(any(), any())).thenReturn(newGen);
-        when(crossoverOperator.apply(any(), any())).thenReturn(newGen);
-        when(mutationOperator.apply(any(), any())).thenReturn(newGen);
-
-        SimpleGeneticAlgorithm<TestIndividual> minimizationGA = new SimpleGeneticAlgorithm<>(
-                fitnessFunction, initializer, selectionOperator,
-                crossoverOperator, mutationOperator,
-                0.5, 10, 3
-        );
-
-        // Run the algorithm (it should trigger the minimization branch)
-        Results<TestIndividual> result = minimizationGA.run();
-
-        // Ensure something ran and the minimization branch was taken
-        assertThat(result).isNotNull();
-        verify(fitnessFunction, atLeastOnce()).isMaximum();
+        assertThat(result.getNumberOfIterations()).isEqualTo(3);
     }
 
     @Test
     void run_ShouldNotStopEarly_WhenMaxIterationsNoImprovementsIsZero() throws CloneNotSupportedException {
-        // Arrange: 0 disables early stopping
         SimpleGeneticAlgorithm<TestIndividual> alg = new SimpleGeneticAlgorithm<>(
                 fitnessFunction, initializer, selectionOperator,
                 crossoverOperator, mutationOperator,
-                0.5, 0, 10 // 👈 0 = disables the stopEarly condition
+                0.5,
+                5,
+                0
         );
 
-        when(fitnessFunction.isMaximum()).thenReturn(true);
-        Population<TestIndividual> population = mock(Population.class);
-        when(initializer.initialize()).thenReturn(population);
-        when(selectionOperator.apply(any(), any())).thenReturn(population);
-        when(crossoverOperator.apply(any(), any())).thenReturn(population);
-        when(mutationOperator.apply(any(), any())).thenReturn(population);
+        Population<TestIndividual> stagn = makePopulation(1L, 1.0, 1.0);
+        when(initializer.initialize()).thenReturn(stagn);
+        when(selectionOperator.apply(any(), any())).thenReturn(stagn);
+        when(crossoverOperator.apply(any(), any())).thenReturn(stagn);
+        when(mutationOperator.apply(any(), any())).thenReturn(stagn);
 
-        // Act
         Results<TestIndividual> result = alg.run();
 
-        // Assert
-        assertThat(result).isNotNull();
-        // This ensures the branch (maxIterationsNoImprovements > 0) == false got executed
+        assertThat(result.getNumberOfIterations()).isEqualTo(5);
     }
 
-    /**
-     * Utility to access private fields via reflection for test validation.
-     */
+    @Test
+    void getters_ShouldReturnClampedConfigurationValues() {
+        SimpleGeneticAlgorithm<TestIndividual> alg = new SimpleGeneticAlgorithm<>(
+                fitnessFunction, initializer, selectionOperator,
+                crossoverOperator, mutationOperator,
+                0.5,
+                0,
+                -10
+        );
+
+        assertThat(alg.getMaxIterations()).isEqualTo(1);
+        assertThat(alg.getMaxIterationsNoImprovements()).isEqualTo(0);
+    }
+
+    @Test
+    void constructor_ShouldClampMaxIterations_WhenNegative() {
+        SimpleGeneticAlgorithm<TestIndividual> alg = new SimpleGeneticAlgorithm<>(
+                fitnessFunction, initializer, selectionOperator,
+                crossoverOperator, mutationOperator,
+                0.5,
+                -1,
+                5
+        );
+
+        assertThat(alg.getMaxIterations()).isEqualTo(1); // NON 0!
+    }
+
+    @Test
+    void run_ShouldEvaluateNewGenerationsEveryIteration() throws CloneNotSupportedException {
+        // Arrange
+        Population<TestIndividual> firstGen = makePopulation(1L, 1.0, 1.0);
+        Population<TestIndividual> afterSelection = makePopulation(2L, 2.0, 2.0);
+        Population<TestIndividual> afterCrossover = makePopulation(3L, 3.0, 3.0);
+        Population<TestIndividual> afterMutation = makePopulation(4L, 4.0, 4.0);
+
+        when(initializer.initialize()).thenReturn(firstGen);
+        when(selectionOperator.apply(any(), any())).thenReturn(afterSelection);
+        when(crossoverOperator.apply(any(), any())).thenReturn(afterCrossover);
+        when(mutationOperator.apply(any(), any())).thenReturn(afterMutation);
+
+        // Act
+        algorithm.run();
+
+        // Assert —  evaluate MUST be invoked:
+        // 1) on firstGeneration
+        // 2) on each iteration's newGeneration
+        verify(fitnessFunction, atLeast(2)).evaluate(any(Population.class));
+    }
+
+    @Test
+    void run_ShouldTriggerMutation_WhenRandomEqualsMutationProbability() throws CloneNotSupportedException {
+        // Mutation probability = 0.5
+        SimpleGeneticAlgorithm<TestIndividual> alg = new SimpleGeneticAlgorithm<>(
+                fitnessFunction, initializer, selectionOperator,
+                crossoverOperator, mutationOperator,
+                0.5, // 👈 valore chiave
+                5, 3
+        ) {
+            @Override
+            protected Random newRandom() {
+                Random r = mock(Random.class);
+                when(r.nextDouble()).thenReturn(0.5);
+                return r;
+            }
+        };
+
+        Population<TestIndividual> afterMutation = makePopulation(100L, 10.0);
+        when(mutationOperator.apply(any(), any())).thenReturn(afterMutation);
+
+        Results<TestIndividual> result = alg.run();
+
+        assertThat(result).isNotNull();
+
+        // La mutazione DEVE essere applicata
+        verify(mutationOperator, atLeastOnce()).apply(any(), any());
+    }
+
+    @Test
+    void run_ShouldNotTreatEqualFitnessAsImprovement_InMinimizationMode() throws CloneNotSupportedException {
+        when(fitnessFunction.isMaximum()).thenReturn(false);
+
+        // first generation
+        Population<TestIndividual> first = makePopulation(1L, 5.0);
+        when(initializer.initialize()).thenReturn(first);
+
+        // next generation with SAME fitness (compareTo == 0)
+        Population<TestIndividual> equal = spy(makePopulation(2L, 5.0));
+        when(selectionOperator.apply(any(), any())).thenReturn(equal);
+        when(crossoverOperator.apply(any(), any())).thenReturn(equal);
+        when(mutationOperator.apply(any(), any())).thenReturn(equal);
+
+        Results<TestIndividual> res = algorithm.run();
+
+        // equal fitness MUST NOT count as improvement
+        verify(equal, never()).setBestIndividual(any());
+    }
+
+    @Test
+    void run_ShouldDetectImprovementOnlyWhenFitnessDecreases_InMinimizationMode() throws CloneNotSupportedException {
+        when(fitnessFunction.isMaximum()).thenReturn(false);
+
+        Population<TestIndividual> first = makePopulation(1L, 10.0);
+        Population<TestIndividual> better = makePopulation(2L, 5.0); // LOWER is better
+
+        when(initializer.initialize()).thenReturn(first);
+        when(selectionOperator.apply(any(), any())).thenReturn(better);
+        when(crossoverOperator.apply(any(), any())).thenReturn(better);
+        when(mutationOperator.apply(any(), any())).thenReturn(better);
+
+        Results<TestIndividual> res = algorithm.run();
+
+        // bestGeneration MUST update to "better"
+        assertThat(res.getBestGeneration().iterator().next().getFitness()).isEqualTo(5.0);
+    }
+
+    @Test
+    void run_ShouldRecognizeCompareLessThanZeroAsImprovement_InMinimizationMode()
+            throws CloneNotSupportedException {
+
+        when(fitnessFunction.isMaximum()).thenReturn(false);
+
+        // first generation
+        Population<TestIndividual> first = makePopulation(1L, 10.0);
+
+        // second generation LOWER fitness (compareTo < 0)
+        Population<TestIndividual> better = makePopulation(2L, 1.0);
+
+        when(initializer.initialize()).thenReturn(first);
+        when(selectionOperator.apply(any(), any())).thenReturn(better);
+        when(crossoverOperator.apply(any(), any())).thenReturn(better);
+        when(mutationOperator.apply(any(), any())).thenReturn(better);
+
+        Results<TestIndividual> res = algorithm.run();
+
+        // verify improvement is detected
+        assertThat(res.getBestIndividual().getFitness()).isEqualTo(1.0);
+    }
+
+    @Test
+    void getMaxIterationsNoImprovements_ShouldReturnConfiguredValue() {
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(
+                        fitnessFunction, initializer, selectionOperator, crossoverOperator, mutationOperator,
+                        0.5,
+                        10,   // maxIterations
+                        7     // maxIterationsNoImprovements
+                );
+
+        assertThat(alg.getMaxIterationsNoImprovements()).isEqualTo(7);
+    }
+
+    @Test
+    void run_Maximization_ShouldNotCountEqualFitnessAsImprovement() throws CloneNotSupportedException {
+        when(fitnessFunction.isMaximum()).thenReturn(true);
+
+        Population<TestIndividual> first = makePopulation(1L, 5.0);
+        Population<TestIndividual> equal = makePopulation(2L, 5.0);
+
+        when(initializer.initialize()).thenReturn(first);
+        when(selectionOperator.apply(any(), any())).thenReturn(equal);
+        when(crossoverOperator.apply(any(), any())).thenReturn(equal);
+        when(mutationOperator.apply(any(), any())).thenReturn(equal);
+
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(fitnessFunction, initializer,
+                        selectionOperator, crossoverOperator, mutationOperator,
+                        0.0, 5, 2); // early stop at 2
+
+        Results<TestIndividual> res = alg.run();
+
+        assertThat(res.getNumberOfIterations()).isEqualTo(3);
+    }
+
+    @Test
+    void run_Maximization_ShouldDetectImprovementCorrectly() throws CloneNotSupportedException {
+        when(fitnessFunction.isMaximum()).thenReturn(true);
+
+        Population<TestIndividual> first = makePopulation(1L, 5.0);
+        Population<TestIndividual> better = makePopulation(2L, 6.0);
+
+        when(initializer.initialize()).thenReturn(first);
+        when(selectionOperator.apply(any(), any())).thenReturn(better);
+        when(crossoverOperator.apply(any(), any())).thenReturn(better);
+        when(mutationOperator.apply(any(), any())).thenReturn(better);
+
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(fitnessFunction, initializer,
+                        selectionOperator, crossoverOperator, mutationOperator,
+                        0.0, 5, 5);
+
+        Results<TestIndividual> res = alg.run();
+
+        assertThat(res.getBestIndividual().getFitness()).isEqualTo(6.0);
+    }
+
+
+    @Test
+    void run_Minimization_ShouldNotCountEqualFitnessAsImprovement() throws CloneNotSupportedException {
+        when(fitnessFunction.isMaximum()).thenReturn(false);
+
+        Population<TestIndividual> first = makePopulation(1L, 5.0);
+        Population<TestIndividual> equal = makePopulation(2L, 5.0);
+
+        when(initializer.initialize()).thenReturn(first);
+        when(selectionOperator.apply(any(), any())).thenReturn(equal);
+        when(crossoverOperator.apply(any(), any())).thenReturn(equal);
+        when(mutationOperator.apply(any(), any())).thenReturn(equal);
+
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(fitnessFunction, initializer,
+                        selectionOperator, crossoverOperator, mutationOperator,
+                        0.0, 5, 2);
+
+        Results<TestIndividual> res = alg.run();
+
+        assertThat(res.getNumberOfIterations()).isEqualTo(3);
+    }
+
+    @Test
+    void run_Minimization_ShouldDetectImprovementCorrectly() throws CloneNotSupportedException {
+        when(fitnessFunction.isMaximum()).thenReturn(false);
+
+        Population<TestIndividual> first = makePopulation(1L, 5.0);
+        Population<TestIndividual> better = makePopulation(2L, 4.0);
+
+        when(initializer.initialize()).thenReturn(first);
+        when(selectionOperator.apply(any(), any())).thenReturn(better);
+        when(crossoverOperator.apply(any(), any())).thenReturn(better);
+        when(mutationOperator.apply(any(), any())).thenReturn(better);
+
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(fitnessFunction, initializer,
+                        selectionOperator, crossoverOperator, mutationOperator,
+                        0.0, 5, 5);
+
+        Results<TestIndividual> res = alg.run();
+
+        assertThat(res.getBestIndividual().getFitness()).isEqualTo(4.0);
+    }
+
+    @Test
+    void constructor_ShouldAcceptBoundaryZeroMutationProbability() {
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(
+                        fitnessFunction, initializer, selectionOperator, crossoverOperator, mutationOperator,
+                        0.0, 10, 5
+                );
+
+        assertThat(alg.getMutationProbability()).isEqualTo(0.0);
+    }
+
+    @Test
+    void constructor_ShouldAcceptBoundaryOneMutationProbability() {
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(
+                        fitnessFunction, initializer, selectionOperator, crossoverOperator, mutationOperator,
+                        1.0, 10, 5
+                );
+
+        assertThat(alg.getMutationProbability()).isEqualTo(1.0);
+    }
+
+    @Test
+    void run_ShouldEvaluateInitialPopulation() throws CloneNotSupportedException {
+        Population<TestIndividual> initial = makePopulation(1L, 1.0, 2.0);
+        when(initializer.initialize()).thenReturn(initial);
+
+        SimpleGeneticAlgorithm<TestIndividual> alg =
+                new SimpleGeneticAlgorithm<>(
+                        fitnessFunction, initializer, selectionOperator,
+                        crossoverOperator, mutationOperator,
+                        0.5, 3, 1
+                );
+
+        alg.run();
+
+        // Must be called AT LEAST ONCE on the INITIAL population
+        verify(fitnessFunction, atLeastOnce()).evaluate(initial);
+    }
+
     private Object getPrivateField(Object obj, String fieldName) {
         try {
-            var field = obj.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field.get(obj);
+            var f = obj.getClass().getDeclaredField(fieldName);
+            f.setAccessible(true);
+            return f.get(obj);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

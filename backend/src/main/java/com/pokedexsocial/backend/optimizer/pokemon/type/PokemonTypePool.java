@@ -29,7 +29,6 @@ public class PokemonTypePool {
 
     @PostConstruct
     public void init() {
-        System.out.println("Inizializzo il PokemonTypePool...");
         types = new HashSet<>();
         initialize();
     }
