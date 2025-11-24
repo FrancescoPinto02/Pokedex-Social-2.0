@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
+
   snyk-backend:
     name: Snyk Scan Backend
     runs-on: ubuntu-latest
@@ -16,32 +17,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
           cache: "maven"
 
-      - name: Set up Node.js (for Snyk CLI)
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+      - name: Make mvnw executable
+        working-directory: backend
+        run: chmod +x mvnw
 
       - name: Install Snyk CLI
         run: npm install -g snyk
 
-      - name: Snyk test (backend)
-        working-directory: backend
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk test --project-name=pokedex-backend
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-      - name: Snyk monitor (backend)
+      - name: Run Snyk test (backend)
         working-directory: backend
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk monitor --project-name=pokedex-backend
+        run: snyk test --severity-threshold=high --project-name=pokedex-backend
+
+      - name: Run Snyk monitor (backend)
+        working-directory: backend
+        run: snyk monitor --severity-threshold=high --project-name=pokedex-backend
 
 
   snyk-frontend:
@@ -52,28 +51,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
 
       - name: Install Snyk CLI
         run: npm install -g snyk
 
-      - name: Snyk test (frontend)
-        working-directory: frontend
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk test --project-name=pokedex-frontend
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-      - name: Snyk monitor (frontend)
+      - name: Run Snyk test (frontend)
         working-directory: frontend
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk monitor --project-name=pokedex-frontend
+        run: snyk test --severity-threshold=high --project-name=pokedex-frontend
+
+      - name: Run Snyk monitor (frontend)
+        working-directory: frontend
+        run: snyk monitor --severity-threshold=high --project-name=pokedex-frontend
