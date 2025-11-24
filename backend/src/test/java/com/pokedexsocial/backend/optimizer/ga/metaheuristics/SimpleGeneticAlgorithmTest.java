@@ -98,6 +98,23 @@ class SimpleGeneticAlgorithmTest {
 
     @Test
     void run_ShouldPerformMutation_WhenProbabilityTriggers() throws CloneNotSupportedException {
+
+        // GA con Random mockato che ritorna sempre 0.1 (< 0.5)
+        SimpleGeneticAlgorithm<TestIndividual> deterministicAlg =
+                new SimpleGeneticAlgorithm<>(
+                        fitnessFunction, initializer, selectionOperator,
+                        crossoverOperator, mutationOperator,
+                        0.5,  // probabilità mutazione
+                        5, 3
+                ) {
+                    @Override
+                    protected Random newRandom() {
+                        Random r = mock(Random.class);
+                        when(r.nextDouble()).thenReturn(0.1); // forza la mutazione
+                        return r;
+                    }
+                };
+
         Population<TestIndividual> sel = makePopulation(2L, 1.5, 2.5);
         Population<TestIndividual> cross = makePopulation(3L, 2.0, 2.2);
         Population<TestIndividual> mut = makePopulation(4L, 3.0, 3.1);
@@ -106,11 +123,14 @@ class SimpleGeneticAlgorithmTest {
         when(crossoverOperator.apply(any(), any())).thenReturn(cross);
         when(mutationOperator.apply(any(), any())).thenReturn(mut);
 
-        Results<TestIndividual> result = algorithm.run();
+        Results<TestIndividual> result = deterministicAlg.run();
 
         assertThat(result).isNotNull();
+
+        // Ora È GARANTITO che venga chiamata
         verify(mutationOperator, atLeastOnce()).apply(any(), any());
     }
+
 
     @Test
     void run_ShouldSkipMutation_WhenProbabilityDoesNotTrigger() throws CloneNotSupportedException {
