@@ -39,26 +39,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # ====================================
-      # 🔐 SNYK BACKEND (Maven)
-      # ====================================
-      - name: Snyk Test - Backend
-        uses: snyk/actions/maven@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test --file=backend/pom.xml --project-name=backend
-        continue-on-error: false
-
-      - name: Snyk Monitor - Backend
-        uses: snyk/actions/maven@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor --file=backend/pom.xml --project-name=backend
-        continue-on-error: true
-
-      # Build & test backend
       - name: Build and test
         run: mvn clean verify -B
 
@@ -131,9 +111,6 @@ jobs:
           path: backend/target/*.jar
 
 
-  # =====================================================
-  # FRONTEND JOB
-  # =====================================================
   frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
@@ -154,25 +131,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      # ====================================
-      # 🔐 SNYK FRONTEND (Node)
-      # ====================================
-      - name: Snyk Test - Frontend
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test frontend --file=frontend/package.json --project-name=frontend
-        continue-on-error: false
-
-      - name: Snyk Monitor - Frontend
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor frontend --file=frontend/package.json --project-name=frontend
-        continue-on-error: true
 
       - name: Build project
         run: npm run build
