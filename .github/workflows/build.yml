@@ -47,8 +47,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: test
-          project-folder: backend
+          command: test --file=backend/pom.xml --project-name=backend
         continue-on-error: false
 
       - name: Snyk Monitor - Backend
@@ -56,8 +55,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: monitor
-          project-folder: backend
+          command: monitor --file=backend/pom.xml --project-name=backend
         continue-on-error: true
 
       # Build & test backend
@@ -165,8 +163,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: test
-          project-folder: frontend
+          command: test frontend --file=frontend/package.json --project-name=frontend
         continue-on-error: false
 
       - name: Snyk Monitor - Frontend
@@ -174,8 +171,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: monitor
-          project-folder: frontend
+          command: monitor frontend --file=frontend/package.json --project-name=frontend
         continue-on-error: true
 
       - name: Build project
