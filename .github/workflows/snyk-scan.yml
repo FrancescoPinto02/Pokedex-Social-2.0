@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   snyk-backend:
     name: Snyk Scan Backend
     runs-on: ubuntu-latest
@@ -22,30 +21,27 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
+          cache: "maven"
 
-      - name: Cache Maven repository
-        uses: actions/cache@v4
+      - name: Set up Node.js (for Snyk CLI)
+        uses: actions/setup-node@v4
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('backend/pom.xml') }}
+          node-version: "20"
 
-      - name: Run Snyk test (backend)
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Snyk test (backend)
         working-directory: backend
-        uses: snyk/actions/maven@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test --project-name=pokedex-backend
-        continue-on-error: false
+        run: snyk test --project-name=pokedex-backend
 
-      - name: Run Snyk monitor (backend)
+      - name: Snyk monitor (backend)
         working-directory: backend
-        uses: snyk/actions/maven@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor --project-name=pokedex-backend
-        continue-on-error: true
+        run: snyk monitor --project-name=pokedex-backend
 
 
   snyk-frontend:
@@ -60,27 +56,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
 
-      - name: Run Snyk test (frontend)
-        working-directory: frontend
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test --project-name=pokedex-frontend
-        continue-on-error: false
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-      - name: Run Snyk monitor (frontend)
+      - name: Snyk test (frontend)
         working-directory: frontend
-        uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor --project-name=pokedex-frontend
-        continue-on-error: true
+        run: snyk test --project-name=pokedex-frontend
+
+      - name: Snyk monitor (frontend)
+        working-directory: frontend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk monitor --project-name=pokedex-frontend
