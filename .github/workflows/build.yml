@@ -39,6 +39,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+        continue-on-error: false
+
+      - name: Snyk Monitor
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+        continue-on-error: true
+
       - name: Build and test
         run: mvn clean verify -B
 
