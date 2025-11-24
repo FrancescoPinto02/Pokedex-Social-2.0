@@ -41,7 +41,10 @@ public class PokemonService {
     private final AbilityRepository abilityRepository;
     private final TypeEffectivenessRepository effectivenessRepository;
 
-    public PokemonService(PokemonRepository pokemonRepository, TypeRepository typeRepository, AbilityRepository abilityRepository, TypeEffectivenessRepository effectivenessRepository) {
+    public PokemonService(PokemonRepository pokemonRepository,
+                          TypeRepository typeRepository,
+                          AbilityRepository abilityRepository,
+                          TypeEffectivenessRepository effectivenessRepository) {
         this.pokemonRepository = pokemonRepository;
         this.typeRepository = typeRepository;
         this.abilityRepository = abilityRepository;

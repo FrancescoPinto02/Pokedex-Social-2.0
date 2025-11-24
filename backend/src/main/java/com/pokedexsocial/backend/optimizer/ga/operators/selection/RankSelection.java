@@ -30,7 +30,7 @@ public class RankSelection<T extends Individual> extends SelectionOperator<T> {
         double cursor = 0.0;
 
         for (int i = 0; i < N; i++) {
-            double rank = i + 1; // 1 → N
+            double rank = i + 1.0; // 1 → N
             double prob = rank / totalRankSum;
 
             rankWheel.add(new RankElement<>(sorted.get(i), cursor, prob));
