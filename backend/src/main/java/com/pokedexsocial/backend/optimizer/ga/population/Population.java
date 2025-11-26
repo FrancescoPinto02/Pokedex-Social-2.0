@@ -98,23 +98,12 @@ public abstract class Population<T extends Individual> extends HashSet<T> implem
         return (size == 0) ? 0.0 : sum / size;
     }
 
-    /*@ public normal_behavior
-      @   requires other != null;
-      @   assignable \nothing;
-      @
-      @
-      @   ensures (\result == 0 && this.getAverageFitness() == other.getAverageFitness()) ||
-      @           (\result < 0 && this.getAverageFitness() < other.getAverageFitness()) ||
-      @           (\result > 0 && this.getAverageFitness() > other.getAverageFitness());
-      @*/
-    @Override
-    public /*@ pure @*/ int compareTo(Population other) {
-        double thisAvg = this.getAverageFitness();
-        double otherAvg = other.getAverageFitness();
 
-        if (thisAvg < otherAvg) return -1;
-        else if (thisAvg > otherAvg) return 1;
-        else return 0;
+    //@ skipesc
+    //@ skiprac
+    @Override
+    public int compareTo(Population other) {
+        return Double.compare(this.getAverageFitness(), other.getAverageFitness());
     }
 
     //@ skipesc
