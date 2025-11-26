@@ -2,10 +2,11 @@ package com.pokedexsocial.backend.optimizer.ga.population;
 
 import com.pokedexsocial.backend.optimizer.ga.individuals.Individual;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
-public abstract class Population<T extends Individual> extends LinkedHashSet<T> implements Comparable<Population<T>>{
+public abstract class Population<T extends Individual> extends HashSet<T> implements Comparable<Population<T>>{
 
     //@ spec_public
     private long id;
@@ -97,13 +98,27 @@ public abstract class Population<T extends Individual> extends LinkedHashSet<T> 
         return (size == 0) ? 0.0 : sum / size;
     }
 
-    //@ skipesc
+    /*@ public normal_behavior
+      @   requires other != null;
+      @   assignable \nothing;
+      @
+      @
+      @   ensures (\result == 0 && this.getAverageFitness() == other.getAverageFitness()) ||
+      @           (\result < 0 && this.getAverageFitness() < other.getAverageFitness()) ||
+      @           (\result > 0 && this.getAverageFitness() > other.getAverageFitness());
+      @*/
     @Override
-    public int compareTo(Population other) {
-        return Double.compare(this.getAverageFitness(), other.getAverageFitness());
+    public /*@ pure @*/ int compareTo(Population other) {
+        double thisAvg = this.getAverageFitness();
+        double otherAvg = other.getAverageFitness();
+
+        if (thisAvg < otherAvg) return -1;
+        else if (thisAvg > otherAvg) return 1;
+        else return 0;
     }
 
     //@ skipesc
+    //@ skiprac
     @Override
     public Population<T> clone() {
         return (Population<T>) super.clone();
@@ -111,6 +126,7 @@ public abstract class Population<T extends Individual> extends LinkedHashSet<T> 
 
 
     //@ skipesc
+    //@ skiprac
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -121,6 +137,7 @@ public abstract class Population<T extends Individual> extends LinkedHashSet<T> 
     }
 
     //@ skipesc
+    //@ skiprac
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), id);

@@ -61,6 +61,7 @@ public abstract class Individual implements Comparable<Individual>, Cloneable{
 
 
     //@ skipesc
+    //@ skiprac
     @Override
     public Individual clone() throws CloneNotSupportedException {
         return (Individual) super.clone();

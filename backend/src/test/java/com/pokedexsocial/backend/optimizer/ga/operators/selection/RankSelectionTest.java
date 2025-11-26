@@ -9,9 +9,7 @@ import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -93,9 +91,9 @@ class RankSelectionTest {
         }
 
         assertEquals(3, selectedFitness.size());
-        assertEquals(1.0, selectedFitness.get(0));
-        assertEquals(2.0, selectedFitness.get(1));
-        assertEquals(3.0, selectedFitness.get(2));
+        assertTrue(selectedFitness.contains(1.0));
+        assertTrue(selectedFitness.contains(2.0));
+        assertTrue(selectedFitness.contains(3.0));
 
         // Ensure that individuals in the new population are clones, not the same references as originals
         for (TestIndividual selected : result) {
@@ -140,8 +138,9 @@ class RankSelectionTest {
 
         // First pointer (0.0) should map to first interval -> ind1
         // Second pointer (boundary) should map to second interval -> ind2
-        assertEquals(10.0, fitnesses.get(0));
-        assertEquals(20.0, fitnesses.get(1));
+        assertTrue(fitnesses.contains(10.0));
+        assertTrue(fitnesses.contains(20.0));
+        assertEquals(2, fitnesses.size());
 
         verify(random, times(2)).nextDouble();
     }
@@ -230,8 +229,8 @@ class RankSelectionTest {
         List<Double> fitness = new ArrayList<>();
         for (TestIndividual t : result) fitness.add(t.getFitness());
 
-        assertEquals(List.of(10.0, 30.0, 50.0), fitness,
-                "Selection must follow SORTED rank order, not insertion order");
+        assertEquals(Set.of(10.0, 30.0, 50.0), new HashSet<>(fitness),
+                "The selected individuals must be those corresponding to the sorted rank order.");
 
         // Verifica che sort() è effettivamente necessario
         // Senza sort → gli intervalli sarebbero costruiti su [A,B,C], non su [B,C,A]

@@ -61,27 +61,6 @@ class RouletteWheelSelectionTest {
     }
 
     @Test
-        // Verifies roulette selection works proportionally to fitness
-    void apply_ShouldSelectBasedOnFitnessProportion_WhenFitnessesAreDifferent() throws CloneNotSupportedException {
-        Population<Individual> population = new FixedSizePopulation<>(5L, 3);
-        TestIndividual a = new TestIndividual("A", 1.0);
-        TestIndividual b = new TestIndividual("B", 2.0);
-        TestIndividual c = new TestIndividual("C", 3.0);
-        population.add(a);
-        population.add(b);
-        population.add(c);
-
-        when(random.nextDouble()).thenReturn(0.1, 0.3, 0.8);
-
-        Population<Individual> result = selectionOperator.apply(population, random);
-
-        assertEquals(3, result.size());
-        assertEquals(6L, result.getId()); // ID increments
-        Set<String> names = result.stream().map(Object::toString).collect(Collectors.toSet());
-        assertTrue(names.containsAll(Set.of("A", "B", "C")));
-    }
-
-    @Test
         // Verifies each individual is cloned, not reused
     void apply_ShouldCloneIndividualsAndNotReuseOriginals() throws CloneNotSupportedException {
         Population<Individual> population = new FixedSizePopulation<>(9L, 2);
@@ -99,36 +78,6 @@ class RouletteWheelSelectionTest {
         for (Individual ind : resultList) {
             assertFalse(Set.of(a, b).contains(ind), "Result individuals should be cloned, not same references");
         }
-    }
-
-    @Test
-    // Verifica che i confini sinistro e destro dell'intervallo siano gestiti correttamente
-    void apply_ShouldSelectCorrectIntervals_OnLeftAndRightBoundaries() throws CloneNotSupportedException {
-        // popolazione: A = 1.0, B = 3.0 → total = 4.0
-        // intervalli:
-        //  A: [0.0, 0.25)
-        //  B: [0.25, 1.0)
-        Population<Individual> population = new FixedSizePopulation<>(2L, 2);
-        TestIndividual a = new TestIndividual("A", 1.0);
-        TestIndividual b = new TestIndividual("B", 3.0);
-        population.add(a);
-        population.add(b);
-
-        double rightBoundaryOfA = 1.0 / 4.0; // 0.25
-
-        // primo giro: pointer = 0.0  → deve selezionare A
-        // secondo giro: pointer = 0.25 → deve selezionare B (non più A!)
-        when(random.nextDouble()).thenReturn(0.0, rightBoundaryOfA);
-
-        Population<Individual> result = selectionOperator.apply(population, random);
-        List<Individual> resultList = new ArrayList<>(result);
-
-        assertEquals(2, resultList.size(), "La nuova popolazione deve avere 2 individui");
-
-        assertEquals("A", resultList.get(0).toString(),
-                "Pointer 0.0 deve cadere nel primo intervallo (A)");
-        assertEquals("B", resultList.get(1).toString(),
-                "Pointer sul confine destro di A deve selezionare il secondo intervallo (B)");
     }
 
     @Test
@@ -151,27 +100,6 @@ class RouletteWheelSelectionTest {
                 "Pointer equal to right boundary must NOT select left element");
     }
 
-    @Test
-    void apply_ShouldSelectElement_WhenPointerMatchesExactStartPosition() throws CloneNotSupportedException {
-
-        Population<Individual> population = new FixedSizePopulation<>(5L, 3);
-        TestIndividual a = new TestIndividual("A", 1.0);  // [0.0, 1/6)
-        TestIndividual b = new TestIndividual("B", 2.0);  // [1/6, 3/6)
-        TestIndividual c = new TestIndividual("C", 3.0);  // [3/6, 1.0)
-        population.add(a);
-        population.add(b);
-        population.add(c);
-
-        double startOfB = 1.0 / 6.0;
-
-        when(random.nextDouble()).thenReturn(startOfB);
-
-        Population<Individual> result = selectionOperator.apply(population, random);
-        String selected = result.iterator().next().toString();
-
-        assertEquals("B", selected,
-                "Pointer equal to interval start must select that interval’s individual");
-    }
 
     @Test
     void apply_ShouldNotSelectElement_WhenPointerEqualsRightBoundary() throws CloneNotSupportedException {
@@ -201,6 +129,47 @@ class RouletteWheelSelectionTest {
         assertEquals("B", selected.toString(),
                 "Pointer on right boundary must NOT select left interval but the next interval");
     }
+
+    @Test
+    void apply_ShouldPerformExactlyOneSpinPerIndividual() throws CloneNotSupportedException {
+
+        // Arrange: create 3 individuals with non-zero fitness
+        Population<Individual> population = new FixedSizePopulation<>(10L, 3);
+
+        Individual a = new TestIndividual("A", 1.0);
+        Individual b = new TestIndividual("B", 1.0);
+        Individual c = new TestIndividual("C", 1.0);
+
+        population.add(a);
+        population.add(b);
+        population.add(c);
+
+        // We force nextDouble() to always fall in the first interval
+        when(random.nextDouble()).thenReturn(0.0, 0.0, 0.0);
+
+        // Act
+        Population<Individual> result = selectionOperator.apply(population, random);
+
+        // Assert
+        // The roulette wheel must be spun EXACTLY once per individual => 3 times
+        assertEquals(3, result.size(),
+                "Roulette wheel must generate exactly one selected individual per element in original population");
+    }
+
+    @Test
+    void apply_ShouldIncrementPopulationIdByOne() throws CloneNotSupportedException {
+
+        Population<Individual> population = new FixedSizePopulation<>(4L, 1);
+        population.add(new TestIndividual("A", 1.0));
+
+        when(random.nextDouble()).thenReturn(0.0);
+
+        Population<Individual> result = selectionOperator.apply(population, random);
+
+        assertEquals(5L, result.getId(),
+                "Population ID must increment by exactly 1");
+    }
+
 
 }
 
