@@ -18,7 +18,16 @@ import com.pokedexsocial.backend.optimizer.ga.operators.selection.RankSelection;
 import com.pokedexsocial.backend.optimizer.ga.operators.selection.RouletteWheelSelection;
 import com.pokedexsocial.backend.optimizer.ga.operators.selection.SelectionOperator;
 import com.pokedexsocial.backend.optimizer.ga.results.Results;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
 
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +60,6 @@ public class PokemonGABenchmark {
         loader = new PokedexJsonLoader();
 
         fitnessSum = 0;
-        timeSum = 0;
         generationsSum = 0;
         count = 0;
     }
@@ -92,9 +100,7 @@ public class PokemonGABenchmark {
 
     @Benchmark
     public Results<PokemonTeamGA> runGA() throws Exception {
-        long start = System.currentTimeMillis();
         lastResult = ga.run();
-        lastTime = System.currentTimeMillis() - start;
         return lastResult;
     }
 
@@ -105,7 +111,6 @@ public class PokemonGABenchmark {
 
         fitnessSum += bf;
         generationsSum += gens;
-        timeSum += lastTime;
         count++;
     }
 
@@ -115,8 +120,6 @@ public class PokemonGABenchmark {
         System.out.printf("Selection: %s | Crossover: %s%n", selectionType, crossoverType);
         System.out.printf("Media Fitness: %.3f%n", fitnessSum / count);
         System.out.printf("Media Iterazioni: %.2f%n", (double) generationsSum / count);
-        System.out.printf("Media Tempo interno GA: %.2f ms%n", (double) timeSum / count);
-        System.out.println("(JMH fornirà il tempo medio effettivo del metodo @Benchmark)");
         System.out.println("================================\n");
     }
 }

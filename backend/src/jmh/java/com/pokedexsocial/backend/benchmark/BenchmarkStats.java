@@ -9,16 +9,14 @@ public class BenchmarkStats {
         public final String selection;
         public final String crossover;
 
-        public final long timeMillis;
         public final int generations;
         public final double bestFitness;
 
         public Entry(String selection, String crossover,
-                     long timeMillis, int generations, double bestFitness) {
+                     int generations, double bestFitness) {
 
             this.selection = selection;
             this.crossover = crossover;
-            this.timeMillis = timeMillis;
             this.generations = generations;
             this.bestFitness = bestFitness;
         }

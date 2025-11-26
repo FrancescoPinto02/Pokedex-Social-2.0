@@ -16,7 +16,7 @@ public class PokemonGeneticAlgorithm extends SimpleGeneticAlgorithm<PokemonTeamG
     public PokemonGeneticAlgorithm(
             @Qualifier("pokemonTeamFitnessFunction") FitnessFunction<PokemonTeamGA> fitnessFunction,
             Initializer<PokemonTeamGA> initializer,
-            @Qualifier("KTournament") SelectionOperator<PokemonTeamGA> selectionOperator,
+            @Qualifier("RankSelection") SelectionOperator<PokemonTeamGA> selectionOperator,
             @Qualifier("Uniform") CrossoverOperator<PokemonTeamGA> crossoverOperator,
             MutationOperator<PokemonTeamGA> mutationOperator,
             @Value("${optimizer.mutation-probability:1.0}") double mutationProbability,
