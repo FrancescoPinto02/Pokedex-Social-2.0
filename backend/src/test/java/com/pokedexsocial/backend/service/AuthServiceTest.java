@@ -187,7 +187,7 @@ class AuthServiceTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getToken()).isEqualTo("jwtToken");
-        assertThat(response.getUserId()).isEqualTo(1L);
+        assertThat(response.getUserId()).isEqualTo(1);
         assertThat(response.getUsername()).isEqualTo("ashKetchum");
 
         verify(userRepository).findByEmail("ash@pokedex.com");

@@ -134,7 +134,10 @@ public class PokemonTeamFitnessFunction extends FitnessFunction<PokemonTeamGA> {
             }
         }
 
-        return normalizeFitness(total/num, total, 1, MIN_FITNESS, MAX_FITNESS);
+        if (num == 0) {
+            throw new ArithmeticException("No weaknesses to compute average");
+        }
+        return normalizeFitness((double) total / num, total, 1, MIN_FITNESS, MAX_FITNESS);
     }
 
     //Funzione per normalizzare i valori di fitness

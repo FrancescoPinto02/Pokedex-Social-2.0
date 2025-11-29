@@ -215,7 +215,11 @@ class PokemonGATest {
                 10, 10, 10, 10, 10, 10, PokemonRarity.COMMON);
 
         // Se monotype = true, l’immunità di type2 deve essere ignorata
-        assertThat(p.getResistances()).doesNotContain(immuneType);
+        assertThat(p.getResistances()).isNotNull();
+
+        if (!p.getResistances().isEmpty()) {
+            assertThat(p.getResistances()).doesNotContain(immuneType);
+        }
     }
 
 
@@ -281,7 +285,12 @@ class PokemonGATest {
                 10, 10, 10, 10, 10, 10, PokemonRarity.COMMON);
 
         // Se monotype = true, le debolezze di type2 non devono essere conteggiate
-        assertThat(p.getWeaknesses()).doesNotContain(fakeWeakness);
+        assertThat(p.getWeaknesses()).isNotNull();
+
+        if (!p.getWeaknesses().isEmpty()) {
+            assertThat(p.getWeaknesses()).doesNotContain(fakeWeakness);
+        }
+
     }
 
     // ----------------------------------------------------------
