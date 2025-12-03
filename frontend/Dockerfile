@@ -1,7 +1,7 @@
 # ------------------------------
 # STAGE 1: Build stage
 # ------------------------------
-FROM node:18-alpine AS build
+FROM node:18-bullseye-slim AS build
 WORKDIR /app
 
 # copia solo i file necessari e installa le dipendenze
@@ -17,7 +17,7 @@ RUN npm run build
 # ------------------------------
 # STAGE 2: Serve stage
 # ------------------------------
-FROM node:18-alpine AS serve
+FROM node:18-bullseye-slim AS serve
 WORKDIR /app
 
 # installa serve globalmente (solo runtime)
