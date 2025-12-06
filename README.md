@@ -26,56 +26,31 @@ It allows users to explore and filter Pokémon from the Pokédex, register and c
 - **Containerization:** **Docker**
 ---
 
-## ⚙️ Requirements
-
-To run the project locally, make sure you have the following installed:
-
-- **Java JDK 17**
-- **Maven 3.9.11**
-- **Node.js 22.16.0**
+## 🐳 Installation with Docker Compose (Recommended)
+### ⚙️ Requirements
 - **Docker**
 
----
+### 1️⃣ Download docker-compose.yml
+Follow the link and download the file
 
-## 🧩 Local Setup and Build Instructions
+👉[Download docker-compose.yml](https://github.com/FrancescoPinto02/Pokedex-Social-2.0/blob/main/docker-compose.yml)
 
-Follow these steps to run the project locally:
+### 2️⃣ Configure the `JWT_SECRET` Environment Variable
+Before running the application, you must set the `JWT_SECRET` environment variable inside the `docker-compose.yml` file.
 
-### 1️⃣ Clone the Repository
+👉[Generate a secret](https://jwtsecrets.com/)
+
+> ⚠️ **Important:** Make sure to use a 64 characters secret!
+
+### 3️⃣ Start the Application Using Docker Compose
+Once the `JWT_SECRET` variable is configured and Docker is Up, you can start the entire application using Docker Compose.
+Run the following command from the same directory of the docker-compose.yml file:
 
 ```bash
-git clone https://github.com/FrancescoPinto02/Pokedex-Social-2.0.git
-cd Pokedex-Social-2.0
+docker compose up -d --build
 ```
 
-### 2️⃣ Start the Database (PostgreSQL via Docker)
-From the project root, run:
-```bash
-docker compose up -d
-```
-> ✅ Ensure the PostgreSQL container starts correctly before continuing.  
-> The container will automatically build and populate the database using the scripts and CSV datasets in the `/database` folder.
-
-### 3️⃣ Start the Backend (Spring Boot)
-Move to the backend directory and start the Spring Boot application:
-```bash
-cd backend
-mvn clean install
-mvn spring-boot:run
-```
-> The backend will be available at http://localhost:8080
-
-### 4️⃣ Start the Frontend (React + Vite)
-Move to the frontend directory and start the Vite development server:
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-> The frontend will be available at http://localhost:5173
-
-### 5️⃣ Access the Application
-
+### 4️⃣ Access the Application
 Once both the **backend** and **frontend** are running:
 
 - 🌐 Open your browser and navigate to **http://localhost:5173**
@@ -88,3 +63,5 @@ If everything is set up correctly, you should now be able to:
 
 > ⚠️ **Note:** Some backend features are still under development and might not be fully accessible through the frontend interface.
 > For testing or exploring other features, it’s recommended to use **Postman** with the available API endpoints.
+
+
